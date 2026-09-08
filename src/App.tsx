@@ -22,6 +22,8 @@ import { FinalApprovalPage } from './components/authority/FinalApprovalPage';
 import { AuditTrailPage } from './components/governance/AuditTrailPage';
 import { ReportsPage } from './components/governance/ReportsPage';
 import { HelpFaqPage } from './components/help/HelpFaqPage';
+import { LoginPage } from './components/auth/LoginPage';
+import { RegisterPage } from './components/auth/RegisterPage';
 
 
 
@@ -130,10 +132,35 @@ const MainAppContent: React.FC = () => {
   );
 };
 
+const AuthGate: React.FC = () => {
+  const { userProfile, isLoading } = useApp();
+  const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
+
+  if (isLoading) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-slate-50">
+        <div className="flex flex-col items-center gap-3">
+          <span className="w-8 h-8 border-3 border-emerald-600 border-t-transparent rounded-full animate-spin" />
+          <span className="text-xs font-semibold text-slate-500">Connecting to Nila Thozhan...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!userProfile) {
+    if (authMode === 'register') {
+      return <RegisterPage onSwitchToLogin={() => setAuthMode('login')} />;
+    }
+    return <LoginPage onSwitchToRegister={() => setAuthMode('register')} />;
+  }
+
+  return <MainAppContent />;
+};
+
 export default function App() {
   return (
     <AppProvider>
-      <MainAppContent />
+      <AuthGate />
     </AppProvider>
   );
 }

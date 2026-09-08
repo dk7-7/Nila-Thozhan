@@ -9,11 +9,14 @@ export const AuditTrailPage: React.FC = () => {
 
   // Flatten all audit events from all documents
   const allEvents = documents.flatMap((doc) =>
-    doc.auditTrail.map((ev) => ({
+    (doc.auditTrail || []).map((ev) => ({
       ...ev,
       documentNumber: doc.documentNumber,
       documentTitle: doc.title,
       docId: doc.id,
+      userName: (ev as any).userName || (ev as any).actorName || 'System',
+      userRole: (ev as any).userRole || (ev as any).actorRole || 'OFFICER',
+      details: (ev as any).details || (ev as any).comments || ev.action,
     }))
   ).sort((a, b) => (b.timestamp > a.timestamp ? 1 : -1));
 

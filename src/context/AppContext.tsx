@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import {
   AuditEvent,
   DemoScenarioType,
@@ -11,10 +11,18 @@ import {
   CadastralBoundaries,
   TamilCadastralDetails,
 } from '../types';
-import { INITIAL_DOCUMENTS, INITIAL_GIS_PARCELS, INITIAL_NOTIFICATIONS } from '../data/mockData';
 import { AppLanguage, TRANSLATIONS, TranslationKey } from '../i18n/translations';
+import { authService, UserProfileData } from '../services/authService';
+import { documentService } from '../services/documentService';
+import { workflowService } from '../services/workflowService';
+import { storageService } from '../services/storageService';
+import { notificationService } from '../services/notificationService';
+import { gisService } from '../services/gisService';
+import { ticketService } from '../services/ticketService';
+import { queryService } from '../services/queryService';
+import { supabase } from '../lib/supabase';
 
-interface UserProfile {
+export interface UserProfile {
   name: string;
   role: UserRole;
   roleTitle: string;
@@ -52,6 +60,12 @@ export const ROLE_PROFILES: Record<UserRole, UserProfile> = {
     avatarInitials: 'VN',
     location: 'Registration Secretariat',
   },
+};
+
+const DEMO_CREDENTIALS: Record<UserRole, { email: string; pass: string }> = {
+  CITIZEN: { email: 'citizen@nilathozhan.tn.gov.in', pass: 'NilaThozhan2026!' },
+  OFFICER: { email: 'officer@nilathozhan.tn.gov.in', pass: 'NilaThozhan2026!' },
+  HIGH_AUTHORITY: { email: 'authority@nilathozhan.tn.gov.in', pass: 'NilaThozhan2026!' },
 };
 
 interface AppContextType {
@@ -121,7 +135,7 @@ interface AppContextType {
     category?: string
   ) => void;
   downloadFile: (filename: string, content: string, mimeType?: string) => void;
-  uploadNewDocument: (newDoc: Partial<LandDocument>) => string;
+  uploadNewDocument: (newDoc: Partial<LandDocument>) => Promise<string> | string;
   updateCadastralDetails: (docId: string, details: Partial<TamilCadastralDetails>) => void;
   updateCadastralBoundaries: (docId: string, boundaries: Partial<CadastralBoundaries>) => void;
   markNotificationRead: (id: string) => void;
@@ -131,6 +145,12 @@ interface AppContextType {
   uploadedFileUrl: string | null;
   uploadedFileName: string | null;
   attachFileToDocument: (docId: string, file: File) => string;
+
+  // Supabase Auth Integration
+  userProfile: UserProfileData | null;
+  isLoading: boolean;
+  refreshData: () => Promise<void>;
+  signOut: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -138,17 +158,21 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentRole, setCurrentRole] = useState<UserRole>('CITIZEN');
   const [activeTab, setActiveTab] = useState<NavigationTab>('my-documents');
-  const [documents, setDocuments] = useState<LandDocument[]>(INITIAL_DOCUMENTS);
+  const [documents, setDocuments] = useState<LandDocument[]>([]);
   const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(null);
-  const [gisParcels, setGisParcels] = useState<GisParcelData[]>(INITIAL_GIS_PARCELS);
+  const [gisParcels, setGisParcels] = useState<GisParcelData[]>([]);
   const [selectedParcelId, setSelectedParcelId] = useState<string | null>(null);
-  const [notifications, setNotifications] = useState<NotificationItem[]>(INITIAL_NOTIFICATIONS);
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [currentScenario, setCurrentScenario] = useState<DemoScenarioType>('NORMAL_VERIFIED');
   const [uploadedFileUrl, setUploadedFileUrl] = useState<string | null>(null);
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+
+  const [userProfile, setUserProfile] = useState<UserProfileData | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   // Language state with localStorage persistence (defaults to Tamil)
   const [currentLanguage, setCurrentLanguage] = useState<AppLanguage>(() => {
@@ -167,10 +191,178 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return (langDict as Record<string, string>)[key] || (TRANSLATIONS.en as Record<string, string>)[key] || fallback || key;
   };
 
+  // 1. Data refresh from Supabase with role-based filtering
+  const refreshData = useCallback(async (activeRole?: UserRole, profile?: UserProfileData | null) => {
+    try {
+      const role = activeRole || currentRole;
+      const prof = profile !== undefined ? profile : userProfile;
+
+      const [allDocs, parcels, notifs] = await Promise.all([
+        documentService.getAllDocuments(),
+        gisService.getAllParcels(),
+        notificationService.getNotifications(),
+      ]);
+
+      // Strict RBAC filtering: Citizens see only their own documents
+      const docs = role === 'CITIZEN' && prof
+        ? allDocs.filter((d) => d.uploadedBy === prof.id || d.citizenEmail === prof.email)
+        : allDocs;
+
+      setDocuments(docs);
+      setGisParcels(parcels);
+      setNotifications(notifs);
+
+      if (docs.length > 0 && !selectedDocumentId) {
+        setSelectedDocumentId(docs[0].id);
+      }
+      if (parcels.length > 0 && !selectedParcelId) {
+        setSelectedParcelId(parcels[0].parcelId);
+      }
+    } catch (err) {
+      console.error('Failed to refresh data from Supabase:', err);
+    }
+  }, [currentRole, userProfile, selectedDocumentId, selectedParcelId]);
+
+  // 2. Initial Auth & Session Setup
+  useEffect(() => {
+    let isMounted = true;
+
+    async function initAuth() {
+      setIsLoading(true);
+      let activeProfile: UserProfileData | null = null;
+      let activeUserRole: UserRole = 'CITIZEN';
+
+      try {
+        const session = await authService.getCurrentSession();
+        if (session?.user) {
+          const profile = await authService.getProfile(session.user.id);
+          if (profile) {
+            activeProfile = profile;
+            activeUserRole = profile.role;
+          }
+        } else {
+          // Attempt demo login or query profiles directly
+          try {
+            const creds = DEMO_CREDENTIALS.CITIZEN;
+            activeProfile = await authService.signIn(creds.email, creds.pass);
+            activeUserRole = activeProfile.role;
+          } catch {
+            const { data: dbProfiles } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('role', 'CITIZEN')
+              .limit(1);
+
+            if (dbProfiles && dbProfiles.length > 0) {
+              const p = dbProfiles[0];
+              activeProfile = {
+                id: p.id,
+                email: p.email,
+                fullName: p.full_name,
+                role: p.role as UserRole,
+                department: p.department || undefined,
+                designation: p.designation || undefined,
+                phone: p.phone || undefined,
+                location: p.location || undefined,
+                avatarUrl: p.avatar_url || undefined,
+                isActive: p.is_active,
+              };
+              activeUserRole = 'CITIZEN';
+            }
+          }
+        }
+      } catch (e) {
+        console.error('Auth initialization check:', e);
+      } finally {
+        if (isMounted) {
+          setUserProfile(activeProfile);
+          setCurrentRole(activeUserRole);
+          setIsLoading(false);
+          refreshData(activeUserRole, activeProfile);
+        }
+      }
+    }
+
+    initAuth();
+
+    // Subscribe to realtime notifications
+    const unsubscribeNotifs = notificationService.subscribeToNotifications((newNotif) => {
+      setNotifications((prev) => [newNotif, ...prev]);
+    });
+
+    return () => {
+      isMounted = false;
+      unsubscribeNotifs();
+    };
+  }, []);
+
+  // When role changes, switch profile & enforce role views
+  const setRole = async (newRole: UserRole) => {
+    setIsLoading(true);
+    setCurrentRole(newRole);
+    let newProfile: UserProfileData | null = null;
+
+    try {
+      const creds = DEMO_CREDENTIALS[newRole];
+      if (creds) {
+        try {
+          newProfile = await authService.signIn(creds.email, creds.pass);
+        } catch {
+          const { data: dbProfiles } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('role', newRole)
+            .limit(1);
+
+          if (dbProfiles && dbProfiles.length > 0) {
+            const p = dbProfiles[0];
+            newProfile = {
+              id: p.id,
+              email: p.email,
+              fullName: p.full_name,
+              role: p.role as UserRole,
+              department: p.department || undefined,
+              designation: p.designation || undefined,
+              phone: p.phone || undefined,
+              location: p.location || undefined,
+              avatarUrl: p.avatar_url || undefined,
+              isActive: p.is_active,
+            };
+          }
+        }
+        if (newProfile) {
+          setUserProfile(newProfile);
+        }
+      }
+    } catch (e) {
+      console.error('Error switching role session:', e);
+    } finally {
+      setIsLoading(false);
+      await refreshData(newRole, newProfile);
+    }
+
+    // Redirect to primary view for role
+    if (newRole === 'CITIZEN') {
+      setActiveTab('my-documents');
+    } else if (newRole === 'OFFICER') {
+      setActiveTab('queue');
+    } else {
+      setActiveTab('approvals');
+    }
+  };
+
+  const signOut = async () => {
+    await authService.signOut();
+    setUserProfile(null);
+    setDocuments([]);
+  };
+
   const attachFileToDocument = (docId: string, file: File): string => {
     const url = URL.createObjectURL(file);
     setUploadedFileUrl(url);
     setUploadedFileName(file.name);
+    setPendingFile(file);
+
     setDocuments((prev) =>
       prev.map((d) =>
         d.id === docId
@@ -187,27 +379,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return url;
   };
 
-  const currentProfile = ROLE_PROFILES[currentRole];
+  // Combine DB profile info with UI display metadata
+  const baseProfile = ROLE_PROFILES[currentRole];
+  const currentProfile: UserProfile = {
+    ...baseProfile,
+    name: userProfile?.fullName || baseProfile.name,
+    location: userProfile?.location || baseProfile.location,
+    department: userProfile?.department || baseProfile.department,
+    roleTitle: userProfile?.designation || baseProfile.roleTitle,
+  };
 
   const selectedDocument = documents.find((d) => d.id === selectedDocumentId) || documents[0] || null;
   const selectedParcel = gisParcels.find((p) => p.parcelId === selectedParcelId) || null;
 
-  // Unread notifications for current role
   const unreadNotificationCount = notifications.filter(
     (n) => !n.read && n.targetRoles.includes(currentRole)
   ).length;
-
-  const setRole = (newRole: UserRole) => {
-    setCurrentRole(newRole);
-    // When switching roles, redirect to that role's primary landing view
-    if (newRole === 'CITIZEN') {
-      setActiveTab('my-documents');
-    } else if (newRole === 'OFFICER') {
-      setActiveTab('queue');
-    } else {
-      setActiveTab('approvals');
-    }
-  };
 
   const CITIZEN_ALLOWED_TABS: NavigationTab[] = [
     'dashboard',
@@ -221,7 +408,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const navigateTo = (tab: NavigationTab, docId?: string, parcelId?: string) => {
     let targetTab = tab;
-    // Strict RBAC: Citizen cannot access administrative or verification queues
     if (currentRole === 'CITIZEN' && !CITIZEN_ALLOWED_TABS.includes(tab)) {
       targetTab = 'my-documents';
     }
@@ -238,16 +424,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setSelectedParcelId(parcelId);
   };
 
-  const updateExtractedField = (
+  const updateExtractedField = async (
     docId: string,
     fieldKey: string,
     newValue: string,
     markVerified: boolean = true
   ) => {
+    // Optimistic UI update
     setDocuments((prevDocs) =>
       prevDocs.map((doc) => {
         if (doc.id !== docId) return doc;
-
         const currentField = doc.extractedFields[fieldKey];
         if (!currentField) return doc;
 
@@ -262,8 +448,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           },
         };
 
-        // Also update top-level survey/area if applicable
-        const updatedDoc: LandDocument = {
+        return {
           ...doc,
           extractedFields: updatedFields,
           surveyNumber: fieldKey === 'surveyNumber' ? newValue : doc.surveyNumber,
@@ -271,109 +456,45 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           village: fieldKey === 'village' ? newValue : doc.village,
           landArea: fieldKey === 'landArea' ? newValue : doc.landArea,
         };
-
-        return updatedDoc;
       })
     );
-  };
 
-  const saveManualVerification = (docId: string, notes: string) => {
-    const timestamp = new Date().toLocaleString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-
-    setDocuments((prevDocs) =>
-      prevDocs.map((doc) => {
-        if (doc.id !== docId) return doc;
-
-        const newAudit: AuditEvent = {
-          id: `aud-${Date.now()}`,
-          timestamp,
-          actorName: currentProfile.name,
-          actorRole: currentRole,
-          action: 'Manual Officer Verification Completed',
-          status: 'Fields Verified & Saved',
-          comments: notes || 'Officer verified optical ambiguity against revenue volume register.',
-        };
-
-        // Mark all extracted fields verified
-        const updatedFields = { ...doc.extractedFields };
-        Object.keys(updatedFields).forEach((key) => {
-          updatedFields[key] = {
-            ...updatedFields[key],
-            isVerified: true,
-          };
-        });
-
-        return {
-          ...doc,
-          status: 'GIS_VERIFIED' as const,
-          overallConfidence: 'HIGH' as const,
-          confidenceScore: 95,
-          extractedFields: updatedFields,
-          validationReport: {
-            ...doc.validationReport,
-            status: 'VERIFIED' as const,
-            deterministicRulesPassed: true,
-            plainLanguageExplanation: 'Officer has resolved optical ambiguities. All fields confirmed.',
-          },
-          auditTrail: [...doc.auditTrail, newAudit],
-        };
-      })
-    );
+    try {
+      await documentService.updateExtractedField(docId, fieldKey, newValue, markVerified);
+    } catch (e) {
+      console.error('Failed to update field in Supabase:', e);
+      refreshData();
+    }
   };
 
   const updateDocumentField = (docId: string, fieldKey: string, newValue: string) => {
     updateExtractedField(docId, fieldKey, newValue, true);
   };
 
-  const resolveDocumentConflict = (
+  const saveManualVerification = async (docId: string, notes: string) => {
+    try {
+      await documentService.saveManualVerification(docId, notes);
+      await refreshData();
+    } catch (e) {
+      console.error('Failed to save manual verification in Supabase:', e);
+    }
+  };
+
+  const resolveDocumentConflict = async (
     docId: string,
     resolution: 'ACCEPT_GIS' | 'FLAG_FIELD_INSPECTION',
     notes: string
   ) => {
-    const timestamp = new Date().toLocaleString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-
-    setDocuments((prevDocs) =>
-      prevDocs.map((doc) => {
-        if (doc.id !== docId) return doc;
-
-        const newAudit: AuditEvent = {
-          id: `aud-${Date.now()}`,
-          timestamp,
-          actorName: currentProfile.name,
-          actorRole: currentRole,
-          action: `Conflict Resolved: ${resolution}`,
-          status: resolution === 'ACCEPT_GIS' ? 'GIS_VERIFIED' : 'NEEDS_ATTENTION',
-          comments: notes,
-        };
-
-        return {
-          ...doc,
-          status: (resolution === 'ACCEPT_GIS' ? 'GIS_VERIFIED' : 'NEEDS_ATTENTION') as any,
-          actionRequiredCitizen:
-            resolution === 'FLAG_FIELD_INSPECTION'
-              ? 'Physical field surveyor inspection requested for boundary resolution.'
-              : undefined,
-          auditTrail: [...doc.auditTrail, newAudit],
-        };
-      })
-    );
+    try {
+      await workflowService.resolveGisConflict(docId, resolution, notes);
+      await refreshData();
+    } catch (e) {
+      console.error('Failed to resolve conflict in Supabase:', e);
+    }
   };
 
   const loadScenario = (scenario: DemoScenarioType) => {
     setCurrentScenario(scenario);
-    // Find matching document for this scenario
     const matchingDoc = documents.find((d) => d.scenarioType === scenario);
     if (matchingDoc) {
       setSelectedDocumentId(matchingDoc.id);
@@ -383,62 +504,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  const submitOfficerDecision = (
+  const submitOfficerDecision = async (
     docId: string,
     action: 'APPROVE' | 'RETURN' | 'REJECT' | 'NEEDS_MANUAL_REVIEW',
     reason?: string,
     comments?: string
   ) => {
-    const timestamp = new Date().toLocaleString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-
-    setDocuments((prevDocs) =>
-      prevDocs.map((doc) => {
-        if (doc.id !== docId) return doc;
-
-        let nextStatus: LandDocument['status'] = 'READY_FOR_APPROVAL';
-        if (action === 'REJECT') nextStatus = 'REJECTED';
-        if (action === 'RETURN' || action === 'NEEDS_MANUAL_REVIEW') nextStatus = 'NEEDS_ATTENTION';
-
-        const effectiveReason = reason || action;
-        const effectiveComments = comments || 'Action recorded by officer';
-
-        const newAudit: AuditEvent = {
-          id: `aud-${Date.now()}`,
-          timestamp,
-          actorName: currentProfile.name,
-          actorRole: currentRole,
-          action: `Officer Decision: ${action}`,
-          status: nextStatus,
-          comments: `${effectiveReason} - ${effectiveComments}`,
-        };
-
-        return {
-          ...doc,
-          status: nextStatus,
-          actionRequiredCitizen:
-            action === 'RETURN'
-              ? `Action Required: ${effectiveReason}. Please update or re-upload your document.`
-              : doc.actionRequiredCitizen,
-          officerRecommendation: {
-            action: action === 'NEEDS_MANUAL_REVIEW' ? 'RETURN' : action,
-            reason: effectiveReason,
-            comments: effectiveComments,
-            officerName: currentProfile.name,
-            date: timestamp,
-          },
-          auditTrail: [...doc.auditTrail, newAudit],
-        };
-      })
-    );
+    try {
+      await workflowService.submitOfficerDecision(docId, action, reason, comments);
+      await refreshData();
+    } catch (e) {
+      console.error('Failed to submit officer decision in Supabase:', e);
+    }
   };
 
-  const submitDigitalSignature = (
+  const submitDigitalSignature = async (
     docId: string,
     signerNameOrData:
       | string
@@ -452,126 +532,55 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     designation?: string,
     certificateId?: string
   ) => {
-    const timestamp = new Date().toLocaleString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-
     const isObj = typeof signerNameOrData === 'object';
     const signerName = isObj ? signerNameOrData.signerName : signerNameOrData;
     const signerDesignation = isObj
       ? signerNameOrData.signerDesignation
-      : designation || 'Sub-Registrar & Executive Approver';
+      : designation || 'Sub-Registrar & Head of Approvals';
     const certId = isObj
       ? signerNameOrData.certificateId
-      : certificateId || `DSC-${Date.now()}`;
-    const sigHash = isObj && signerNameOrData.hashSha256
-      ? signerNameOrData.hashSha256
-      : `SHA256:${Array.from({ length: 16 }, () =>
-          Math.floor(Math.random() * 16).toString(16)
-        ).join('')}`;
+      : certificateId || `DSC-TN-2026-${Math.floor(10000 + Math.random() * 90000)}`;
+    const sigHash = isObj && signerNameOrData.hashSha256 ? signerNameOrData.hashSha256 : undefined;
 
-    const signatureData: DigitalSignatureData = {
-      certificateId: certId,
-      signerName,
-      signerDesignation,
-      signDate: timestamp,
-      algorithm: 'RSA-PSS / SHA-256 (CCA India Compliant D-Sign Prototype)',
-      signatureHash: sigHash,
-      verificationUrl: `https://landrecords.gov.in/verify/dsign/${certId}`,
-    };
-
-    setDocuments((prevDocs) =>
-      prevDocs.map((doc) => {
-        if (doc.id !== docId) return doc;
-
-        const newAudit: AuditEvent = {
-          id: `aud-${Date.now()}`,
-          timestamp,
-          actorName: signerName,
-          actorRole: 'HIGH_AUTHORITY',
-          action: 'Final Approval & Digital Signature',
-          status: 'APPROVED',
-          comments: `Digitally signed using Certificate ${certId}. Cryptographic integrity sealed.`,
-          digitalSignatureId: certId,
-        };
-
-        return {
-          ...doc,
-          status: 'APPROVED' as const,
-          actionRequiredCitizen: undefined,
-          digitalSignature: signatureData,
-          auditTrail: [...doc.auditTrail, newAudit],
-        };
-      })
-    );
+    try {
+      await workflowService.approveDocumentAndSign(docId, {
+        certificateId: certId,
+        signerName,
+        signerDesignation,
+        signatureHash: sigHash,
+      });
+      await refreshData();
+    } catch (e) {
+      console.error('Failed to execute digital signature in Supabase:', e);
+    }
   };
 
-  const batchSubmitDigitalSignatures = (
+  const batchSubmitDigitalSignatures = async (
     docIds: string[],
     signerName: string,
     signerDesignation: string,
     certificateId: string
   ) => {
-    docIds.forEach((id) => {
-      submitDigitalSignature(id, {
+    for (const id of docIds) {
+      await submitDigitalSignature(id, {
         signerName,
         signerDesignation,
         certificateId,
       });
-    });
+    }
   };
 
-  const addCitizenQuery = (docId: string, querySubject: string, queryMessage: string) => {
-    const timestamp = new Date().toLocaleString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-
-    setDocuments((prevDocs) =>
-      prevDocs.map((doc) => {
-        if (doc.id !== docId) return doc;
-
-        const newAudit: AuditEvent = {
-          id: `aud-${Date.now()}`,
-          timestamp,
-          actorName: currentProfile.name,
-          actorRole: 'CITIZEN',
-          action: `Citizen Query Filed: ${querySubject}`,
-          status: 'NEEDS_ATTENTION',
-          comments: queryMessage,
-        };
-
-        return {
-          ...doc,
-          status: 'NEEDS_ATTENTION' as const,
-          actionRequiredCitizen: `Query Pending Officer Response: "${querySubject}"`,
-          auditTrail: [...doc.auditTrail, newAudit],
-        };
-      })
-    );
-
-    // Add officer notification
-    const newNotif: NotificationItem = {
-      id: `notif-${Date.now()}`,
-      title: `Citizen Query on Survey ${documents.find((d) => d.id === docId)?.surveyNumber || 'Record'}`,
-      message: `Ramesh Patel submitted a query: "${querySubject}"`,
-      timestamp,
-      read: false,
-      targetRoles: ['OFFICER', 'HIGH_AUTHORITY'],
-      type: 'WARNING',
-      documentId: docId,
-    };
-    setNotifications((prev) => [newNotif, ...prev]);
+  const addCitizenQuery = async (docId: string, querySubject: string, queryMessage: string) => {
+    if (!userProfile) return;
+    try {
+      await queryService.submitCitizenQuery(docId, userProfile.id, querySubject, queryMessage);
+      await refreshData();
+    } catch (e) {
+      console.error('Failed to submit query in Supabase:', e);
+    }
   };
 
-  const submitSupportTicket = (
+  const submitSupportTicket = async (
     ticketOrSubject: { category: string; subject: string; message: string; contactEmail?: string } | string,
     messageStr?: string,
     categoryStr?: string
@@ -592,24 +601,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       cat = categoryStr || 'General Support';
     }
 
-    const timestamp = new Date().toLocaleString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-
-    const newNotif: NotificationItem = {
-      id: `notif-${Date.now()}`,
-      title: `Support Ticket Dispatched: [${cat}] ${subj}`,
-      message: `Ticket from ${email} logged ("${msg.slice(0, 40)}..."). Reference: TKT-2026-${Math.floor(1000 + Math.random() * 9000)}.`,
-      timestamp,
-      read: false,
-      targetRoles: [currentRole, 'OFFICER'],
-      type: 'INFO',
-    };
-    setNotifications((prev) => [newNotif, ...prev]);
+    try {
+      await ticketService.submitSupportTicket(cat, subj, msg, email);
+      await refreshData();
+    } catch (e) {
+      console.error('Failed to submit support ticket in Supabase:', e);
+    }
   };
 
   const downloadFile = (filename: string, content: string, mimeType: string = 'text/plain;charset=utf-8') => {
@@ -624,199 +621,78 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     URL.revokeObjectURL(url);
   };
 
-  const updateCadastralDetails = (docId: string, details: Partial<TamilCadastralDetails>) => {
-    setDocuments((prevDocs) =>
-      prevDocs.map((doc) => {
-        if (doc.id !== docId) return doc;
-        return {
-          ...doc,
-          cadastralDetails: {
-            ...doc.cadastralDetails,
-            ...details,
-          },
-        };
-      })
-    );
+  const updateCadastralDetails = async (docId: string, details: Partial<TamilCadastralDetails>) => {
+    try {
+      await documentService.updateCadastralDetails(docId, details);
+      await refreshData();
+    } catch (e) {
+      console.error('Failed to update cadastral details in Supabase:', e);
+    }
   };
 
-  const updateCadastralBoundaries = (docId: string, boundaries: Partial<CadastralBoundaries>) => {
-    setDocuments((prevDocs) =>
-      prevDocs.map((doc) => {
-        if (doc.id !== docId) return doc;
-        return {
-          ...doc,
-          cadastralDetails: {
-            ...doc.cadastralDetails,
-            boundaries: {
-              ...doc.cadastralDetails?.boundaries,
-              ...boundaries,
-            },
-          },
-        };
-      })
-    );
+  const updateCadastralBoundaries = async (docId: string, boundaries: Partial<CadastralBoundaries>) => {
+    try {
+      await documentService.updateCadastralBoundaries(docId, boundaries);
+      await refreshData();
+    } catch (e) {
+      console.error('Failed to update boundaries in Supabase:', e);
+    }
   };
 
-  const uploadNewDocument = (newDocData: Partial<LandDocument>): string => {
-    const newId = `doc-${Date.now()}`;
-    const docNumber = `LR-2024-${Math.floor(100 + Math.random() * 900)}`;
-    const timestamp = new Date().toLocaleString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+  const uploadNewDocument = async (newDocData: Partial<LandDocument>): Promise<string> => {
+    const userId = userProfile?.id || '11111111-1111-1111-1111-111111111111';
 
-    const fullDoc: LandDocument = {
-      id: newId,
-      documentNumber: newDocData.documentNumber || docNumber,
-      title: newDocData.title || (newDocData.surveyNumber ? `Land Record - Survey ${newDocData.surveyNumber}` : (newDocData.fileName ? `Uploaded Deed (${newDocData.fileName})` : 'Uploaded Land Record')),
-      documentType: newDocData.documentType || 'Patta / RoR',
-      surveyNumber: newDocData.surveyNumber || 'Pending Extraction',
-      ownerName: newDocData.ownerName || currentProfile.name,
-      village: newDocData.village || 'Pending Verification',
-      taluk: newDocData.taluk || 'Pending Verification',
-      district: newDocData.district || 'Pending Verification',
-      landArea: newDocData.landArea || 'Pending Verification',
-      landAreaNumeric: newDocData.landAreaNumeric || 0,
-      submissionDate: new Date().toISOString().split('T')[0],
-      status: 'DIGITIZED',
-      overallConfidence: newDocData.overallConfidence || 'HIGH',
-      confidenceScore: newDocData.confidenceScore || 95,
-      uploadedBy: currentProfile.name,
-      citizenEmail: 'citizen@example.com',
-      assignedOfficer: 'Officer K. Sharma',
-      scenarioType: 'NORMAL_VERIFIED',
-      fileUrl: newDocData.fileUrl,
-      fileName: newDocData.fileName,
-      fileSize: newDocData.fileSize,
-      fileType: newDocData.fileType,
-      cadastralDetails: newDocData.cadastralDetails || {
-        pattaNumber: '640',
-        landClassification: 'புன்செய் (Dry Land)',
-        sroJurisdiction: 'Kangeyam SRO',
-        documentRegistrationNumber: `LR-2024-${newDocData.surveyNumber?.replace(/[^0-9]/g, '') || '640'}`,
-        relativeName: 'Palanisamy Gounder',
-        tamilOwnerName: 'சுப்பிரமணியம், த/பெ பழனிச்சாமி கவுண்டர்',
-        tamilVillage: 'லக்கமநாயக்கன்பட்டி',
-        tamilTaluk: 'காங்கேயம்',
-        tamilDistrict: 'திருப்பூர்',
-        boundaries: {
-          north: 'Survey Boundary 143-B',
-          south: 'Village Access Road',
-          east: 'Adjacent Survey 144',
-          west: 'Public Canal',
-          tamilNorth: 'வடக்கு: சர்வே எல்லை 143-B',
-          tamilSouth: 'தெற்கு: கிராமப் பாதை',
-          tamilEast: 'கிழக்கு: பக்கத்து சர்வே 144',
-          tamilWest: 'மேற்கு: பொது வாய்க்கால்',
-        },
-      },
-      // Use OCR-provided extractedFields if available, otherwise fall back to defaults
-      extractedFields: (newDocData.extractedFields && Object.keys(newDocData.extractedFields).length > 0)
-        ? newDocData.extractedFields
-        : {
-            ownerName: {
-              fieldName: 'Owner Full Name',
-              fieldKey: 'ownerName',
-              value: newDocData.ownerName || currentProfile.name,
-              confidence: 'HIGH' as const,
-              confidenceScore: 96,
-              isVerified: true,
-            },
-            surveyNumber: {
-              fieldName: 'Survey Number',
-              fieldKey: 'surveyNumber',
-              value: newDocData.surveyNumber || 'Pending',
-              confidence: 'HIGH' as const,
-              confidenceScore: 94,
-              isVerified: true,
-            },
-            village: {
-              fieldName: 'Village',
-              fieldKey: 'village',
-              value: newDocData.village || 'Pending',
-              confidence: 'HIGH' as const,
-              confidenceScore: 97,
-              isVerified: true,
-            },
-            landArea: {
-              fieldName: 'Total Land Area',
-              fieldKey: 'landArea',
-              value: newDocData.landArea || 'Pending',
-              confidence: 'HIGH' as const,
-              confidenceScore: 92,
-              isVerified: true,
-            },
-          },
-      gisParcel: INITIAL_GIS_PARCELS[6],
-      validationReport: {
-        status: 'VERIFIED',
-        plainLanguageExplanation:
-          'Newly digitized Tamil land record has completed OCR and is ready for officer cross-verification.',
-        conflictingFields: [],
-        evidenceList: [
-          {
-            source: 'Document',
-            extractedValue: `${newDocData.surveyNumber || '143-C'} (${newDocData.ownerName || currentProfile.name})`,
-            status: 'MATCH',
-            detail: 'Newly processed Tamil record upload',
-          },
-          {
-            source: 'GIS',
-            extractedValue: 'Parcel P-143C (2.43 Hectares)',
-            status: 'MATCH',
-            detail: 'Matches Tamil Nadu village survey layout',
-          },
-        ],
-        recommendedAction: 'Proceed with officer verification check.',
-        deterministicRulesPassed: true,
-        aiExplanationText:
-          'Automated pipeline processed document via Tamil OCR model. Nominal, boundary, and spatial features matched parcel polygon.',
-      },
-      auditTrail: [
+    let fileUrl = newDocData.fileUrl || uploadedFileUrl;
+    let fileName = newDocData.fileName || uploadedFileName;
+    let fileSize = newDocData.fileSize;
+    let fileType = newDocData.fileType;
+
+    // Real Supabase storage upload if a file was attached
+    if (pendingFile) {
+      try {
+        const uploadRes = await storageService.uploadDocumentFile(pendingFile, userId);
+        fileUrl = uploadRes.signedUrl;
+        fileName = pendingFile.name;
+        fileSize = `${(pendingFile.size / (1024 * 1024)).toFixed(1)} MB`;
+        fileType = pendingFile.type;
+      } catch (e) {
+        console.warn('Storage upload encountered warning, proceeding with document creation:', e);
+      }
+    }
+
+    try {
+      const newDocId = await documentService.createDocument(
         {
-          id: `aud-${Date.now()}`,
-          timestamp,
-          actorName: currentProfile.name,
-          actorRole: currentRole,
-          action: 'Document Uploaded & Tamil OCR Digitized',
-          status: 'DIGITIZED',
-          comments: `Uploaded via Digitalization Officer Portal (${newDocData.fileName || 'document.pdf'}). Initial Tamil cadastral extraction completed with high optical confidence.`,
+          ...newDocData,
+          fileUrl: fileUrl || undefined,
+          fileName: fileName || undefined,
+          fileSize: fileSize || undefined,
+          fileType: fileType || undefined,
+          citizenEmail: userProfile?.email || 'citizen@nilathozhan.tn.gov.in',
         },
-      ],
-    };
+        userId
+      );
 
-    setDocuments((prevDocs) => [fullDoc, ...prevDocs]);
-    setSelectedDocumentId(newId);
-    if (fullDoc.fileUrl) setUploadedFileUrl(fullDoc.fileUrl);
-    if (fullDoc.fileName) setUploadedFileName(fullDoc.fileName);
-
-    // Create a notification for the officer
-    const newNotif: NotificationItem = {
-      id: `notif-${Date.now()}`,
-      title: `New Tamil Record Digitized: ${fullDoc.documentNumber}`,
-      message: `${fullDoc.documentType} for Survey ${fullDoc.surveyNumber} (${fullDoc.ownerName}) processed and queued for verification.`,
-      timestamp,
-      read: false,
-      targetRoles: ['OFFICER', 'HIGH_AUTHORITY'],
-      type: 'INFO',
-      documentId: newId,
-    };
-    setNotifications((prev) => [newNotif, ...prev]);
-
-    return newId;
+      await refreshData();
+      setSelectedDocumentId(newDocId);
+      setPendingFile(null);
+      return newDocId;
+    } catch (e) {
+      console.error('Failed to upload document to Supabase:', e);
+      throw e;
+    }
   };
 
-  const markNotificationRead = (id: string) => {
+  const markNotificationRead = async (id: string) => {
     setNotifications((prev) =>
       prev.map((n) => (n.id === id ? { ...n, read: true } : n))
     );
+    await notificationService.markAsRead(id);
   };
 
-  const markAllNotificationsRead = () => {
+  const markAllNotificationsRead = async () => {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    await notificationService.markAllAsRead();
   };
 
   const openSearchModal = (initialQuery: string = '') => {
@@ -876,6 +752,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         markAllNotificationsRead,
         openSearchModal,
         closeSearchModal,
+        userProfile,
+        isLoading,
+        refreshData,
+        signOut,
       }}
     >
       {children}

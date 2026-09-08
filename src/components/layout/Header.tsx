@@ -9,6 +9,7 @@ import {
   Globe,
   Menu,
   Check,
+  LogOut,
 } from 'lucide-react';
 import { NotificationDrawer } from '../common/NotificationDrawer';
 
@@ -22,6 +23,7 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
     currentProfile,
     activeTab,
     setRole,
+    signOut,
     unreadNotificationCount,
     openSearchModal,
     currentLanguage,
@@ -273,6 +275,18 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
                     </button>
                   );
                 })}
+                <div className="border-t border-slate-100 mt-1 pt-1">
+                  <button
+                    onClick={() => {
+                      setIsRoleDropdownOpen(false);
+                      signOut();
+                    }}
+                    className="w-full text-left px-4 py-2 flex items-center gap-2.5 text-xs text-rose-600 hover:bg-rose-50 transition-colors font-medium cursor-pointer"
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
+                    <span>Sign Out / வெளியேறு</span>
+                  </button>
+                </div>
               </div>
             )}
           </div>
