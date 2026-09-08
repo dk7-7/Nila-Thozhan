@@ -1,0 +1,6 @@
+{
+  "name": "Land Record Digitalization & Validation",
+  "description": "Government-grade land record digitization, verification, GIS parcel validation, and digital approval platform for citizens, officers, and authorities.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
