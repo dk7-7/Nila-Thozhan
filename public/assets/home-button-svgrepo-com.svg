@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="currentColor">
+  <!-- Six-petal clover/flower logo -->
+  <g transform="translate(50,50)">
+    <!-- Top petal -->
+    <path d="M0,-40 C12,-40 18,-28 18,-18 C18,-8 10,0 0,0 C-10,0 -18,-8 -18,-18 C-18,-28 -12,-40 0,-40Z"/>
+    <!-- Top-right petal -->
+    <path d="M0,-40 C12,-40 18,-28 18,-18 C18,-8 10,0 0,0 C-10,0 -18,-8 -18,-18 C-18,-28 -12,-40 0,-40Z" transform="rotate(60)"/>
+    <!-- Bottom-right petal -->
+    <path d="M0,-40 C12,-40 18,-28 18,-18 C18,-8 10,0 0,0 C-10,0 -18,-8 -18,-18 C-18,-28 -12,-40 0,-40Z" transform="rotate(120)"/>
+    <!-- Bottom petal -->
+    <path d="M0,-40 C12,-40 18,-28 18,-18 C18,-8 10,0 0,0 C-10,0 -18,-8 -18,-18 C-18,-28 -12,-40 0,-40Z" transform="rotate(180)"/>
+    <!-- Bottom-left petal -->
+    <path d="M0,-40 C12,-40 18,-28 18,-18 C18,-8 10,0 0,0 C-10,0 -18,-8 -18,-18 C-18,-28 -12,-40 0,-40Z" transform="rotate(240)"/>
+    <!-- Top-left petal -->
+    <path d="M0,-40 C12,-40 18,-28 18,-18 C18,-8 10,0 0,0 C-10,0 -18,-8 -18,-18 C-18,-28 -12,-40 0,-40Z" transform="rotate(300)"/>
+  </g>
+</svg>
