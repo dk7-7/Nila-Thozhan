@@ -18,7 +18,7 @@ import {
 import { LandDocument } from '../../types';
 
 export const OfficerDashboard: React.FC = () => {
-  const { documents, navigateTo, selectDocument, downloadFile } = useApp();
+  const { documents, navigateTo, selectDocument, downloadFile, t } = useApp();
   const [activeQueueTab, setActiveQueueTab] = useState<
     'HIGH_PRIORITY' | 'MANUAL_VERIFICATION' | 'GIS_CONFLICTS' | 'READY_APPROVAL'
   >('HIGH_PRIORITY');
@@ -88,11 +88,7 @@ export const OfficerDashboard: React.FC = () => {
 
   const handleOpenDocumentWorkflow = (doc: LandDocument) => {
     selectDocument(doc.id);
-    if (doc.overallConfidence === 'LOW' || doc.validationReport.status === 'NEEDS_MANUAL_REVIEW') {
-      navigateTo('manual-verification', doc.id);
-    } else {
-      navigateTo('gis-validation', doc.id);
-    }
+    navigateTo('processing-validation', doc.id);
   };
 
   return (
@@ -108,13 +104,13 @@ export const OfficerDashboard: React.FC = () => {
           }`}
         >
           <div className="text-slate-500 text-xs font-bold uppercase mb-1 tracking-wider">
-            Total Queue
+            {t('totalQueue')}
           </div>
           <div className="text-3xl font-bold text-slate-800">
             {total}
           </div>
           <div className="mt-2 text-xs text-blue-600 font-medium">
-            Click to view High Priority queue
+            {t('clickHighPriority')}
           </div>
         </button>
 
@@ -127,13 +123,13 @@ export const OfficerDashboard: React.FC = () => {
           }`}
         >
           <div className="text-slate-500 text-xs font-bold uppercase mb-1 tracking-wider">
-            Awaiting GIS
+            {t('awaitingGis')}
           </div>
           <div className="text-3xl font-bold text-slate-800">
             {gisConflicts}
           </div>
           <div className="mt-2 text-xs text-amber-600 font-medium font-semibold">
-            {gisConflicts} spatial conflict(s) active
+            {gisConflicts} {t('spatialConflictsActive')}
           </div>
         </button>
 
@@ -146,13 +142,13 @@ export const OfficerDashboard: React.FC = () => {
           }`}
         >
           <div className="text-slate-500 text-xs font-bold uppercase mb-1 tracking-wider">
-            Low Confidence
+            {t('lowConfidence')}
           </div>
           <div className="text-3xl font-bold text-slate-800">
             {needsManualReview < 10 ? `0${needsManualReview}` : needsManualReview}
           </div>
           <div className="mt-2 text-xs text-rose-600 font-medium font-semibold">
-            Requires manual verification
+            {t('requiresManualVerification')}
           </div>
         </button>
 
@@ -165,25 +161,25 @@ export const OfficerDashboard: React.FC = () => {
           }`}
         >
           <div className="text-slate-500 text-xs font-bold uppercase mb-1 tracking-wider">
-            Ready for Sign
+            {t('readyForSign')}
           </div>
           <div className="text-3xl font-bold text-slate-800">
             {readyForSignCount}
           </div>
           <div className="mt-2 text-xs text-emerald-600 font-medium font-semibold">
-            Sent to High Authority
+            {t('sentToHighAuthority')}
           </div>
         </button>
       </div>
 
-      {/* Active Work Queue (Section 10 & Professional Polish table design) */}
+      {/* Active Work Queue */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden flex flex-col">
         {/* Table Header Controls */}
         <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
           <div>
-            <h2 className="font-semibold text-slate-800 text-base">Active Work Queue</h2>
+            <h2 className="font-semibold text-slate-800 text-base">{t('activeWorkQueue')}</h2>
             <p className="text-xs text-slate-500">
-              Select an entry to perform manual OCR verification or GIS spatial check
+              {t('activeWorkQueueDesc')}
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -197,7 +193,7 @@ export const OfficerDashboard: React.FC = () => {
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                High Priority
+                {t('highPriority')}
               </button>
               <button
                 id="tab-queue-manual"
@@ -208,7 +204,7 @@ export const OfficerDashboard: React.FC = () => {
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                Manual Review ({needsManualReview})
+                {t('manualReview')} ({needsManualReview})
               </button>
               <button
                 id="tab-queue-conflicts"
@@ -219,7 +215,7 @@ export const OfficerDashboard: React.FC = () => {
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                GIS Check ({gisConflicts})
+                {t('gisCheck')} ({gisConflicts})
               </button>
               <button
                 id="tab-queue-ready"
@@ -230,20 +226,20 @@ export const OfficerDashboard: React.FC = () => {
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                Ready for Sign ({readyForSignCount})
+                {t('readySign')} ({readyForSignCount})
               </button>
             </div>
             <button
               onClick={handleExportCsv}
               className="text-xs px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded border border-slate-300 font-medium transition-colors"
             >
-              Export CSV
+              {t('exportCsv')}
             </button>
             <button
               onClick={() => navigateTo('upload')}
               className="text-xs px-3 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors font-medium shadow-xs"
             >
-              Batch Upload
+              {t('batchUpload')}
             </button>
           </div>
         </div>
@@ -253,19 +249,19 @@ export const OfficerDashboard: React.FC = () => {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="text-xs font-bold text-slate-400 uppercase tracking-wider bg-white">
-                <th className="px-6 py-4 border-b border-slate-100">Document ID</th>
-                <th className="px-6 py-4 border-b border-slate-100">Survey No.</th>
-                <th className="px-6 py-4 border-b border-slate-100">Owner</th>
-                <th className="px-6 py-4 border-b border-slate-100">AI Confidence</th>
-                <th className="px-6 py-4 border-b border-slate-100">Status</th>
-                <th className="px-6 py-4 border-b border-slate-100 text-right">Action</th>
+                <th className="px-6 py-4 border-b border-slate-100">{t('tableDocId')}</th>
+                <th className="px-6 py-4 border-b border-slate-100">{t('tableSurveyNo')}</th>
+                <th className="px-6 py-4 border-b border-slate-100">{t('tableOwner')}</th>
+                <th className="px-6 py-4 border-b border-slate-100">{t('tableAiConfidence')}</th>
+                <th className="px-6 py-4 border-b border-slate-100">{t('tableStatus')}</th>
+                <th className="px-6 py-4 border-b border-slate-100 text-right">{t('tableAction')}</th>
               </tr>
             </thead>
             <tbody className="text-sm text-slate-600 divide-y divide-slate-50">
               {queueDocs.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-6 py-8 text-center text-slate-500 text-xs">
-                    No documents currently in work queue. Upload a new land document to begin digitization and verification.
+                    {t('noDocsInQueue')}
                   </td>
                 </tr>
               ) : (
@@ -316,7 +312,7 @@ export const OfficerDashboard: React.FC = () => {
                       onClick={() => handleOpenDocumentWorkflow(doc)}
                       className="text-blue-600 hover:text-blue-800 hover:underline font-semibold text-xs transition-colors"
                     >
-                      {doc.overallConfidence === 'LOW' ? 'Verify Manual' : doc.validationReport.status === 'CONFLICT' ? 'Open Map' : 'Review'}
+                      {doc.overallConfidence === 'LOW' ? t('verifyManual') : doc.validationReport.status === 'CONFLICT' ? t('openMap') : t('review')}
                     </button>
                   </td>
                 </tr>
@@ -329,7 +325,7 @@ export const OfficerDashboard: React.FC = () => {
         {/* Table Pagination Footer */}
         <div className="px-6 py-3 border-t border-slate-100 flex items-center justify-between">
           <span className="text-xs text-slate-500">
-            Showing {queueDocs.length} of {documents.length} pending documents
+            {t('showingDocs')} {queueDocs.length} {t('ofPendingDocs')}
           </span>
           <div className="flex gap-1">
             <button

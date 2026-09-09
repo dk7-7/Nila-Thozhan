@@ -241,38 +241,34 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             activeUserRole = profile.role;
           }
         } else {
-          // Attempt demo login or query profiles directly
-          try {
-            const creds = DEMO_CREDENTIALS.CITIZEN;
-            activeProfile = await authService.signIn(creds.email, creds.pass);
-            activeUserRole = activeProfile.role;
-          } catch {
-            const { data: dbProfiles } = await supabase
-              .from('profiles')
-              .select('*')
-              .eq('role', 'CITIZEN')
-              .limit(1);
-
-            if (dbProfiles && dbProfiles.length > 0) {
-              const p = dbProfiles[0];
-              activeProfile = {
-                id: p.id,
-                email: p.email,
-                fullName: p.full_name,
-                role: p.role as UserRole,
-                department: p.department || undefined,
-                designation: p.designation || undefined,
-                phone: p.phone || undefined,
-                location: p.location || undefined,
-                avatarUrl: p.avatar_url || undefined,
-                isActive: p.is_active,
-              };
-              activeUserRole = 'CITIZEN';
-            }
-          }
+          // Default to Citizen demo profile
+          const p = ROLE_PROFILES.CITIZEN;
+          activeProfile = {
+            id: '11111111-1111-1111-1111-111111111111',
+            email: DEMO_CREDENTIALS.CITIZEN.email,
+            fullName: p.name,
+            role: 'CITIZEN',
+            department: p.department,
+            designation: p.roleTitle,
+            location: p.location,
+            isActive: true,
+          };
+          activeUserRole = 'CITIZEN';
         }
       } catch (e) {
-        console.error('Auth initialization check:', e);
+        console.warn('Auth session check completed with demo profile fallback:', e);
+        const p = ROLE_PROFILES.CITIZEN;
+        activeProfile = {
+          id: '11111111-1111-1111-1111-111111111111',
+          email: DEMO_CREDENTIALS.CITIZEN.email,
+          fullName: p.name,
+          role: 'CITIZEN',
+          department: p.department,
+          designation: p.roleTitle,
+          location: p.location,
+          isActive: true,
+        };
+        activeUserRole = 'CITIZEN';
       } finally {
         if (isMounted) {
           setUserProfile(activeProfile);
@@ -300,46 +296,29 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const setRole = async (newRole: UserRole) => {
     setIsLoading(true);
     setCurrentRole(newRole);
-    let newProfile: UserProfileData | null = null;
+    
+    const p = ROLE_PROFILES[newRole];
+    const demoId =
+      newRole === 'CITIZEN'
+        ? '11111111-1111-1111-1111-111111111111'
+        : newRole === 'OFFICER'
+        ? '22222222-2222-2222-2222-222222222222'
+        : '33333333-3333-3333-3333-333333333333';
 
-    try {
-      const creds = DEMO_CREDENTIALS[newRole];
-      if (creds) {
-        try {
-          newProfile = await authService.signIn(creds.email, creds.pass);
-        } catch {
-          const { data: dbProfiles } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('role', newRole)
-            .limit(1);
+    const newProfile: UserProfileData = {
+      id: demoId,
+      email: DEMO_CREDENTIALS[newRole]?.email || `${newRole.toLowerCase()}@nilathozhan.tn.gov.in`,
+      fullName: p.name,
+      role: newRole,
+      department: p.department,
+      designation: p.roleTitle,
+      location: p.location,
+      isActive: true,
+    };
 
-          if (dbProfiles && dbProfiles.length > 0) {
-            const p = dbProfiles[0];
-            newProfile = {
-              id: p.id,
-              email: p.email,
-              fullName: p.full_name,
-              role: p.role as UserRole,
-              department: p.department || undefined,
-              designation: p.designation || undefined,
-              phone: p.phone || undefined,
-              location: p.location || undefined,
-              avatarUrl: p.avatar_url || undefined,
-              isActive: p.is_active,
-            };
-          }
-        }
-        if (newProfile) {
-          setUserProfile(newProfile);
-        }
-      }
-    } catch (e) {
-      console.error('Error switching role session:', e);
-    } finally {
-      setIsLoading(false);
-      await refreshData(newRole, newProfile);
-    }
+    setUserProfile(newProfile);
+    setIsLoading(false);
+    await refreshData(newRole, newProfile);
 
     // Redirect to primary view for role
     if (newRole === 'CITIZEN') {

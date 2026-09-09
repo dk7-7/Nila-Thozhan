@@ -3,7 +3,7 @@ import { useApp } from '../../context/AppContext';
 import { History, Search, Shield, Filter, ArrowDownUp, Download } from 'lucide-react';
 
 export const AuditTrailPage: React.FC = () => {
-  const { documents, downloadFile } = useApp();
+  const { documents, downloadFile, t } = useApp();
   const [filterRole, setFilterRole] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState<string>('');
 
@@ -46,13 +46,13 @@ export const AuditTrailPage: React.FC = () => {
         <div>
           <div className="flex items-center gap-2 text-xs font-bold text-slate-600 uppercase tracking-wide">
             <Shield className="w-4 h-4 text-blue-600" />
-            <span>Immutable Cadastral Governance</span>
+            <span>{t('immutableLedger')}</span>
           </div>
           <h1 className="text-xl sm:text-2xl font-bold text-slate-900 mt-1">
-            System Audit Trail
+            {t('officialAuditLog')}
           </h1>
           <p className="text-xs sm:text-sm text-slate-500">
-            Cryptographically timestamped log of all uploads, automated OCR inferences, manual overrides, and digital certifications.
+            {t('auditSubtitle')}
           </p>
         </div>
 
@@ -61,7 +61,7 @@ export const AuditTrailPage: React.FC = () => {
           className="inline-flex items-center gap-2 px-4 py-2 border border-slate-300 rounded-lg text-xs font-semibold hover:bg-slate-50 text-slate-700 self-start sm:self-auto"
         >
           <Download className="w-3.5 h-3.5" />
-          <span>Export Audit Log (CSV)</span>
+          <span>{t('exportAuditLog')}</span>
         </button>
       </div>
 
@@ -73,24 +73,24 @@ export const AuditTrailPage: React.FC = () => {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search action, officer, doc ID..."
+            placeholder={t('searchPlaceholder')}
             className="w-full pl-9 pr-3 py-2 text-xs rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 font-sans"
           />
         </div>
 
         <div className="flex items-center gap-2 text-xs w-full sm:w-auto">
           <Filter className="w-3.5 h-3.5 text-slate-500" />
-          <span>Role Filter:</span>
+          <span>{t('status')}:</span>
           <select
             value={filterRole}
             onChange={(e) => setFilterRole(e.target.value)}
             className="text-xs font-semibold py-1.5 px-3 rounded-lg border border-slate-300 bg-slate-50 text-slate-800 outline-none"
           >
-            <option value="ALL">All Roles</option>
-            <option value="CITIZEN">Citizen</option>
-            <option value="OFFICER">Digitization Officer</option>
-            <option value="HIGH_AUTHORITY">High Authority</option>
-            <option value="SYSTEM">System AI Engine</option>
+            <option value="ALL">{t('allStatuses')}</option>
+            <option value="CITIZEN">{t('roleCitizen')}</option>
+            <option value="OFFICER">{t('roleOfficer')}</option>
+            <option value="HIGH_AUTHORITY">{t('roleAuthority')}</option>
+            <option value="SYSTEM">System AI</option>
           </select>
         </div>
       </div>
@@ -101,11 +101,11 @@ export const AuditTrailPage: React.FC = () => {
           <table className="w-full text-left border-collapse text-xs">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50 text-[11px] font-bold uppercase tracking-wider text-slate-500">
-                <th className="py-3 px-4">Timestamp</th>
-                <th className="py-3 px-3">Actor & Role</th>
-                <th className="py-3 px-3">Action</th>
-                <th className="py-3 px-3">Document</th>
-                <th className="py-3 px-4">Event Details</th>
+                <th className="py-3 px-4">{t('timestamp')}</th>
+                <th className="py-3 px-3">{t('officerActor')}</th>
+                <th className="py-3 px-3">{t('eventAction')}</th>
+                <th className="py-3 px-3">{t('tableDocId')}</th>
+                <th className="py-3 px-4">{t('extractedFields')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-slate-700">

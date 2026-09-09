@@ -20,7 +20,7 @@ import {
 import { LandDocument } from '../../types';
 
 export const ApprovalsPage: React.FC = () => {
-  const { documents, navigateTo, selectDocument, batchSubmitDigitalSignatures, currentProfile } = useApp();
+  const { documents, navigateTo, selectDocument, batchSubmitDigitalSignatures, currentProfile, t } = useApp();
   const [filterType, setFilterType] = useState<'ALL' | 'READY' | 'RESOLVED_CONFLICT' | 'APPROVED'>('READY');
   const [selectedDocIds, setSelectedDocIds] = useState<string[]>([]);
   const [isBatchModalOpen, setIsBatchModalOpen] = useState<boolean>(false);
@@ -54,49 +54,49 @@ export const ApprovalsPage: React.FC = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-xs">
           <div className="text-slate-500 text-xs font-bold uppercase mb-1 tracking-wider">
-            Pending Final Sign-off
+            {t('pendingFinalSignOff')}
           </div>
           <div className="text-3xl font-bold text-slate-800">
             {pendingCount < 10 ? `0${pendingCount}` : pendingCount}
           </div>
           <div className="mt-2 text-xs text-amber-600 font-medium">
-            Requires executive seal
+            {t('requiresExecutiveSeal')}
           </div>
         </div>
 
         <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-xs">
           <div className="text-slate-500 text-xs font-bold uppercase mb-1 tracking-wider">
-            Approved & Issued
+            {t('approvedAndIssued')}
           </div>
           <div className="text-3xl font-bold text-slate-800">
-            {approvedToday + 148}
+            {approvedToday}
           </div>
           <div className="mt-2 text-xs text-emerald-600 font-medium">
-            Certified with digital signature
+            {t('certifiedDigitalSig')}
           </div>
         </div>
 
         <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-xs">
           <div className="text-slate-500 text-xs font-bold uppercase mb-1 tracking-wider">
-            GIS Conflicts Resolved
+            {t('gisConflictsResolved')}
           </div>
           <div className="text-3xl font-bold text-slate-800">
-            {conflictsResolved + 12}
+            {conflictsResolved}
           </div>
           <div className="mt-2 text-xs text-blue-600 font-medium">
-            Spatial harmony confirmed
+            {t('spatialHarmonyConfirmed')}
           </div>
         </div>
 
         <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-xs">
           <div className="text-slate-500 text-xs font-bold uppercase mb-1 tracking-wider">
-            Avg. Turnaround Time
+            {t('avgTurnaroundTime')}
           </div>
           <div className="text-3xl font-bold text-slate-800">
             {avgApprovalTime}
           </div>
           <div className="mt-2 text-xs text-slate-500 font-medium">
-            Fast-track clearance
+            {t('fastTrackClearance')}
           </div>
         </div>
       </div>
@@ -105,9 +105,9 @@ export const ApprovalsPage: React.FC = () => {
       <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden flex flex-col">
         <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h2 className="font-semibold text-slate-800 text-base">Priority Approval Roster</h2>
+            <h2 className="font-semibold text-slate-800 text-base">{t('executiveApprovals')}</h2>
             <p className="text-xs text-slate-500">
-              Cadastral records verified by field officers awaiting high authority digital signature
+              {t('executiveApprovalsDesc')}
             </p>
           </div>
 
@@ -119,7 +119,7 @@ export const ApprovalsPage: React.FC = () => {
                 className="px-3.5 py-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white font-semibold text-xs transition-colors flex items-center gap-1.5 shadow-xs animate-in fade-in"
               >
                 <Key className="w-3.5 h-3.5" />
-                <span>Batch Sign ({selectedDocIds.length})</span>
+                <span>{t('batchSignSelected')} ({selectedDocIds.length})</span>
               </button>
             )}
 
@@ -132,7 +132,7 @@ export const ApprovalsPage: React.FC = () => {
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                Pending Approval ({pendingCount})
+                {t('filterReady')} ({pendingCount})
               </button>
               <button
                 onClick={() => setFilterType('RESOLVED_CONFLICT')}
@@ -142,7 +142,7 @@ export const ApprovalsPage: React.FC = () => {
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                Conflicted / Resolved
+                {t('filterResolved')}
               </button>
               <button
                 onClick={() => setFilterType('ALL')}
@@ -152,7 +152,7 @@ export const ApprovalsPage: React.FC = () => {
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                All Records ({documents.length})
+                {t('filterAll')} ({documents.length})
               </button>
             </div>
           </div>
@@ -174,16 +174,16 @@ export const ApprovalsPage: React.FC = () => {
               <CheckCircle2 className="w-6 h-6 text-emerald-500" />
             </div>
             <h3 className="text-sm font-semibold text-slate-800">
-              No documents in this queue
+              {t('noDocsFound')}
             </h3>
             <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
-              All pending records in this category have been processed. Switch filters to view other documents.
+              {t('activeWorkQueueDesc')}
             </p>
             <button
               onClick={() => setFilterType('ALL')}
               className="mt-4 text-xs px-3 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors font-medium shadow-xs"
             >
-              View All Documents
+              {t('viewAllDocuments')}
             </button>
           </div>
         ) : (
@@ -205,12 +205,12 @@ export const ApprovalsPage: React.FC = () => {
                       className="rounded text-blue-600 focus:ring-0"
                     />
                   </th>
-                  <th className="px-6 py-4 border-b border-slate-100">Document ID</th>
-                  <th className="px-6 py-4 border-b border-slate-100">Grantee / Owner</th>
-                  <th className="px-6 py-4 border-b border-slate-100">Survey No.</th>
-                  <th className="px-6 py-4 border-b border-slate-100">Officer Finding</th>
-                  <th className="px-6 py-4 border-b border-slate-100">Status</th>
-                  <th className="px-6 py-4 border-b border-slate-100 text-right">Action</th>
+                  <th className="px-6 py-4 border-b border-slate-100">{t('tableDocId')}</th>
+                  <th className="px-6 py-4 border-b border-slate-100">{t('tableOwner')}</th>
+                  <th className="px-6 py-4 border-b border-slate-100">{t('tableSurveyNo')}</th>
+                  <th className="px-6 py-4 border-b border-slate-100">{t('officerCrossVerification')}</th>
+                  <th className="px-6 py-4 border-b border-slate-100">{t('tableStatus')}</th>
+                  <th className="px-6 py-4 border-b border-slate-100 text-right">{t('tableAction')}</th>
                 </tr>
               </thead>
               <tbody className="text-sm text-slate-600 divide-y divide-slate-50">
@@ -268,7 +268,7 @@ export const ApprovalsPage: React.FC = () => {
                           onClick={() => handleReviewClick(doc)}
                           className="text-blue-600 hover:text-blue-800 hover:underline font-semibold text-xs transition-colors"
                         >
-                          Review & Sign
+                          {t('viewDeedDossier')}
                         </button>
                       </td>
                     </tr>

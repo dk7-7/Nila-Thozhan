@@ -472,7 +472,7 @@ export const OfficerUploadPage: React.FC = () => {
             <button id="btn-start-ocr" onClick={handleStartOcr} disabled={!selectedFile || !!fileError}
               className="px-8 py-3 rounded-xl bg-blue-700 hover:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-sm shadow-xs transition-colors flex items-center gap-2">
               <Sparkles className="w-4 h-4"/>
-              Run Gemini Vision OCR
+              Request for Digitalization
             </button>
           </div>
         </div>

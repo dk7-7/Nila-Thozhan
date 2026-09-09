@@ -22,6 +22,7 @@ export const CitizenDashboard: React.FC = () => {
     selectDocument,
     setStatusFilter,
     statusFilter,
+    t,
   } = useApp();
 
   // Metrics
@@ -51,13 +52,13 @@ export const CitizenDashboard: React.FC = () => {
           className="bg-white p-5 rounded-xl border border-slate-200 shadow-xs text-left hover:border-slate-300 transition-colors"
         >
           <div className="text-slate-500 text-xs font-bold uppercase mb-1 tracking-wider">
-            Total Documents
+            {t('totalDocuments')}
           </div>
           <div className="text-3xl font-bold text-slate-800">
             {total}
           </div>
           <div className="mt-2 text-xs text-blue-600 font-medium">
-            Cadastral repository
+            {t('cadastralRepository')}
           </div>
         </button>
 
@@ -66,13 +67,13 @@ export const CitizenDashboard: React.FC = () => {
           className="bg-white p-5 rounded-xl border border-slate-200 shadow-xs text-left hover:border-slate-300 transition-colors"
         >
           <div className="text-slate-500 text-xs font-bold uppercase mb-1 tracking-wider">
-            AI Ingestion
+            {t('aiIngestion')}
           </div>
           <div className="text-3xl font-bold text-slate-800">
             {processing < 10 ? `0${processing}` : processing}
           </div>
           <div className="mt-2 text-xs text-sky-600 font-medium">
-            Processing OCR extraction
+            {t('processingOcrExtraction')}
           </div>
         </button>
 
@@ -81,13 +82,13 @@ export const CitizenDashboard: React.FC = () => {
           className="bg-white p-5 rounded-xl border border-slate-200 shadow-xs text-left hover:border-slate-300 transition-colors"
         >
           <div className="text-slate-500 text-xs font-bold uppercase mb-1 tracking-wider">
-            Verification Queue
+            {t('verificationQueue')}
           </div>
           <div className="text-3xl font-bold text-slate-800">
             {underVerification < 10 ? `0${underVerification}` : underVerification}
           </div>
           <div className="mt-2 text-xs text-amber-600 font-medium">
-            Officer & GIS boundary review
+            {t('officerGisReview')}
           </div>
         </button>
 
@@ -96,13 +97,13 @@ export const CitizenDashboard: React.FC = () => {
           className="bg-white p-5 rounded-xl border border-slate-200 shadow-xs text-left hover:border-slate-300 transition-colors"
         >
           <div className="text-slate-500 text-xs font-bold uppercase mb-1 tracking-wider">
-            Approved & Sealed
+            {t('approvedSealed')}
           </div>
           <div className="text-3xl font-bold text-slate-800">
             {approved < 10 ? `0${approved}` : approved}
           </div>
           <div className="mt-2 text-xs text-emerald-600 font-medium">
-            Ready for instant download
+            {t('readyInstantDownload')}
           </div>
         </button>
       </div>
@@ -120,14 +121,14 @@ export const CitizenDashboard: React.FC = () => {
               <FileUp className="w-5 h-5" />
             </div>
             <h3 className="text-base font-semibold text-slate-800 mb-1">
-              Upload Document
+              {t('navUpload')}
             </h3>
             <p className="text-xs text-slate-500 leading-relaxed">
-              Upload a land deed, sale deed, or Patta for automated intelligent digitization.
+              {t('uploadDeedDesc')}
             </p>
           </div>
           <div className="mt-4 pt-3 border-t border-slate-100 flex items-center text-xs font-semibold text-blue-600">
-            <span>Start Upload</span>
+            <span>{t('startUpload')}</span>
             <ArrowRight className="w-4 h-4 ml-1.5" />
           </div>
         </div>
@@ -143,14 +144,14 @@ export const CitizenDashboard: React.FC = () => {
               <Files className="w-5 h-5" />
             </div>
             <h3 className="text-base font-semibold text-slate-800 mb-1">
-              Document Vault
+              {t('documentVault')}
             </h3>
             <p className="text-xs text-slate-500 leading-relaxed">
-              View uploaded, digitized, and approved land records and certificates.
+              {t('docVaultDesc')}
             </p>
           </div>
           <div className="mt-4 pt-3 border-t border-slate-100 flex items-center text-xs font-semibold text-slate-700">
-            <span>Open Vault ({total})</span>
+            <span>{t('openVault')} ({total})</span>
             <ArrowRight className="w-4 h-4 ml-1.5" />
           </div>
         </div>
@@ -166,14 +167,14 @@ export const CitizenDashboard: React.FC = () => {
               <MapPin className="w-5 h-5" />
             </div>
             <h3 className="text-base font-semibold text-slate-800 mb-1">
-              Find My Land on GIS
+              {t('findMyLandGis')}
             </h3>
             <p className="text-xs text-slate-500 leading-relaxed">
-              Locate your parcel boundary on the official cadastral map from survey records.
+              {t('findLandGisDesc')}
             </p>
           </div>
           <div className="mt-4 pt-3 border-t border-slate-100 flex items-center text-xs font-semibold text-emerald-600">
-            <span>Open GIS Map</span>
+            <span>{t('openGisMap')}</span>
             <ArrowRight className="w-4 h-4 ml-1.5" />
           </div>
         </div>
@@ -184,35 +185,35 @@ export const CitizenDashboard: React.FC = () => {
         <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
           <div>
             <h3 className="font-semibold text-slate-800 text-base">
-              Recent Land Documents
+              {t('recentLandDocs')}
             </h3>
             <p className="text-xs text-slate-500">
-              Live tracking and status updates for your property records
+              {t('liveTrackingDesc')}
             </p>
           </div>
           <button
             onClick={() => navigateTo('my-documents')}
             className="text-xs px-3 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors font-medium shadow-xs"
           >
-            View All Documents
+            {t('viewAllDocuments')}
           </button>
         </div>
 
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="text-xs font-bold text-slate-400 uppercase tracking-wider bg-white">
-              <th className="px-6 py-4 border-b border-slate-100">Document ID</th>
-              <th className="px-6 py-4 border-b border-slate-100">Survey No.</th>
-              <th className="px-6 py-4 border-b border-slate-100">Village / Area</th>
-              <th className="px-6 py-4 border-b border-slate-100">Status</th>
-              <th className="px-6 py-4 border-b border-slate-100 text-right">Action</th>
+              <th className="px-6 py-4 border-b border-slate-100">{t('tableDocId')}</th>
+              <th className="px-6 py-4 border-b border-slate-100">{t('tableSurveyNo')}</th>
+              <th className="px-6 py-4 border-b border-slate-100">{t('villageArea')}</th>
+              <th className="px-6 py-4 border-b border-slate-100">{t('tableStatus')}</th>
+              <th className="px-6 py-4 border-b border-slate-100 text-right">{t('tableAction')}</th>
             </tr>
           </thead>
           <tbody className="text-sm text-slate-600 divide-y divide-slate-50">
             {recentDocs.length === 0 ? (
               <tr>
                 <td colSpan={5} className="px-6 py-8 text-center text-slate-500 text-xs">
-                  No land documents uploaded yet. Click "Upload Document" to digitize your first deed or Patta.
+                  {t('noDocsUploadedYet')}
                 </td>
               </tr>
             ) : (
@@ -245,7 +246,7 @@ export const CitizenDashboard: React.FC = () => {
                       }}
                       className="text-blue-600 hover:text-blue-800 hover:underline font-semibold text-xs"
                     >
-                      View Details
+                      {t('viewDetails')}
                     </button>
                   </td>
                 </tr>

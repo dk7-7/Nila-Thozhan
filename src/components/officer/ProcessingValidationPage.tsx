@@ -223,14 +223,9 @@ export const ProcessingValidationPage: React.FC = () => {
     if (activeTab === 'manual-verification') setCurrentStage('manual-verification');
     else if (activeTab === 'gis-validation') setCurrentStage('gis-validation');
     else if (activeTab === 'approvals') setCurrentStage('approvals');
-    else if (activeTab === 'digitization' || activeTab === 'processing-validation') {
-      // Default to logical stage based on document if on generic route
-      if (currentDoc?.status === 'READY_FOR_APPROVAL') setCurrentStage('approvals');
-      else if (currentDoc?.scenarioType === 'SURVEY_CONFLICT' || currentDoc?.scenarioType === 'AREA_ANOMALY') {
-        setCurrentStage('gis-validation');
-      } else if (currentDoc?.overallConfidence === 'LOW') {
-        setCurrentStage('manual-verification');
-      }
+    else {
+      // VAO starts verification at Step 1: AI Digitization
+      setCurrentStage('digitization');
     }
   }, [activeTab, currentDoc?.id]);
 

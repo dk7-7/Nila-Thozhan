@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "node node_modules/vite/bin/vite.js --port=3000 --host=0.0.0.0",
+    "server": "node server/tngisProxy.cjs",
     "build": "vite build",
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
@@ -16,16 +17,24 @@
     "@tailwindcss/vite": "^4.1.14",
     "@types/leaflet": "^1.9.22",
     "@vitejs/plugin-react": "^5.0.4",
+    "axios": "^1.20.0",
+    "axios-cookiejar-support": "^7.0.0",
+    "cors": "^2.8.6",
+    "crypto-js": "^4.2.0",
     "csv-parse": "^7.0.2",
     "dotenv": "^17.2.3",
     "express": "^4.21.2",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.546.0",
     "motion": "^12.23.24",
+    "ol": "^10.10.0",
     "react": "^19.0.1",
-    "react-dom": "^19.0.1"
+    "react-dom": "^19.0.1",
+    "tough-cookie": "^6.0.2"
   },
   "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/crypto-js": "^4.2.2",
     "@types/express": "^4.17.21",
     "@types/node": "^22.14.0",
     "autoprefixer": "^10.4.21",

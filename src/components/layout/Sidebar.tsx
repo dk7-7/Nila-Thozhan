@@ -95,14 +95,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
               badge: pendingOfficerVerificationCount > 0 ? pendingOfficerVerificationCount : undefined,
             },
             {
-              tab: 'gis-map',
-              label: t('navGisMap'),
-              icon: Map,
-            },
-            {
               tab: 'upload',
               label: t('navUpload'),
               icon: FileUp,
+            },
+            {
+              tab: 'gis-map',
+              label: t('navGisMap'),
+              icon: Map,
             },
             {
               tab: 'reports',
@@ -138,11 +138,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             tab: 'final-approval',
             label: t('navFinalApproval'),
             icon: ShieldCheck,
-          },
-          {
-            tab: 'my-documents',
-            label: t('navMyDocuments'),
-            icon: Files,
           },
           {
             tab: 'gis-map',
