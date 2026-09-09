@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { DocumentPreview } from '../common/DocumentPreview';
 import { StatusBadge } from '../common/StatusBadge';
+import { generatePattaPDF } from '../../services/pdfService';
 import {
   ShieldCheck,
   CheckCircle2,
@@ -41,30 +42,8 @@ export const FinalApprovalPage: React.FC = () => {
   const [isSigningLoading, setIsSigningLoading] = useState(false);
   const [clarificationNotes, setClarificationNotes] = useState('');
 
-  const handleDownloadCertificate = () => {
-    const fileName = `Certified_Land_Record_${currentDoc.surveyNumber.replace(/[/\\?%*:|"<>]/g, '_')}.txt`;
-    const content = `================================================================================
-DIGITAL LAND RECORD CERTIFICATE - STATE CADASTRAL AUTHORITY
-================================================================================
-Document ID      : ${currentDoc.id}
-Document Title   : ${currentDoc.title}
-Document No      : ${currentDoc.documentNumber}
-Survey Number    : ${currentDoc.surveyNumber}
-Land Owner       : ${currentDoc.ownerName}
-Area Extent      : ${currentDoc.landArea}
-Jurisdiction     : Village ${currentDoc.village}, Taluk ${currentDoc.taluk}, District ${currentDoc.district}
-
-DIGITAL SIGNATURE & SEAL DETAILS:
-Signer Name      : ${currentDoc.digitalSignature?.signerName || 'Dr. V. Narayanan, IAS'}
-Designation      : ${currentDoc.digitalSignature?.signerDesignation || 'District Registrar & Cadastral Controller'}
-Certificate ID   : ${currentDoc.digitalSignature?.certificateId || 'DSC-BHOOMI-894210'}
-Signed Date      : ${currentDoc.digitalSignature?.signDate || new Date().toISOString().split('T')[0]}
-SHA256 Hash      : ${currentDoc.digitalSignature?.hashSha256 || 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'}
-
-STATUS           : CERTIFIED & OFFICIALLY RECOGNIZED
-OFFICIAL SEAL    : Cryptographically signed via e-Mudhra Hardware Token
-================================================================================`;
-    downloadFile(fileName, content, 'text/plain');
+  const handleDownloadCertificate = async () => {
+    await generatePattaPDF(currentDoc);
   };
 
   if (!currentDoc) {
@@ -161,7 +140,7 @@ OFFICIAL SEAL    : Cryptographically signed via e-Mudhra Hardware Token
             className="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 shrink-0"
           >
             <Download className="w-3.5 h-3.5" />
-            <span>Download Certified Record</span>
+            <span>Download Patta PDF</span>
           </button>
         </div>
       )}
@@ -521,7 +500,7 @@ OFFICIAL SEAL    : Cryptographically signed via e-Mudhra Hardware Token
                       className="px-4 py-2.5 border border-slate-300 hover:bg-slate-50 rounded-lg text-xs font-semibold flex items-center gap-1.5"
                     >
                       <Download className="w-3.5 h-3.5" />
-                      <span>Download Certified Record</span>
+                      <span>Download Patta PDF</span>
                     </button>
                   </div>
                 </div>

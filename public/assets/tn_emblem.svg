@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300" width="120" height="120">
+  <defs>
+    <style>
+      .bg-circle { fill: #ffffff; stroke: #000000; stroke-width: 3; }
+      .outer-ring { fill: none; stroke: #000000; stroke-width: 2.5; }
+      .inner-ring { fill: none; stroke: #000000; stroke-width: 1.5; }
+      .text-style { font-family: 'Noto Sans Tamil', 'Tamil Sangam MN', sans-serif; font-weight: bold; fill: #000000; font-size: 16px; }
+      .gopuram { fill: none; stroke: #000000; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+      .gopuram-fill { fill: #000000; }
+      .lion-top { fill: #000000; }
+      .star { fill: #000000; }
+    </style>
+    <path id="textArcTop" d="M 45 150 A 105 105 0 0 1 255 150" />
+    <path id="textArcBottom" d="M 255 150 A 105 105 0 0 1 45 150" />
+  </defs>
+
+  <!-- Outer Border Circles -->
+  <circle cx="150" cy="150" r="142" class="bg-circle" />
+  <circle cx="150" cy="150" r="136" class="outer-ring" />
+  <circle cx="150" cy="150" r="102" class="inner-ring" />
+  <circle cx="150" cy="150" r="98" class="inner-ring" />
+
+  <!-- Top Inscription: தமிழ்நாடு அரசு -->
+  <text class="text-style" text-anchor="middle">
+    <textPath href="#textArcTop" startOffset="50%">தமிழ்நாடு அரசு</textPath>
+  </text>
+
+  <!-- Bottom Inscription: வாய்மையே வெல்லும் -->
+  <text class="text-style" font-size="13px" text-anchor="middle">
+    <textPath href="#textArcBottom" startOffset="50%">வாய்மையே வெல்லும்</textPath>
+  </text>
+
+  <!-- Decorative Stars on Sides -->
+  <circle cx="42" cy="150" r="3.5" class="star" />
+  <circle cx="258" cy="150" r="3.5" class="star" />
+
+  <!-- Center Emblem: Srivilliputhur Temple Tower (Gopuram) -->
+  <g transform="translate(150, 158) scale(0.95)">
+    <!-- Base / Kalasam Pillars -->
+    <!-- Kalasams on top of Gopuram -->
+    <path d="M-18,-72 L-18,-78 M-9,-72 L-9,-78 M0,-72 L0,-79 M9,-72 L9,-78 M18,-72 L18,-78" stroke="#000" stroke-width="2"/>
+    <circle cx="-18" cy="-79" r="1.5" class="gopuram-fill"/>
+    <circle cx="-9" cy="-79" r="1.5" class="gopuram-fill"/>
+    <circle cx="0" cy="-80" r="2" class="gopuram-fill"/>
+    <circle cx="9" cy="-79" r="1.5" class="gopuram-fill"/>
+    <circle cx="18" cy="-79" r="1.5" class="gopuram-fill"/>
+
+    <!-- Gopuram Tiers -->
+    <path d="M-22,-72 L22,-72 L20,-62 L-20,-62 Z" class="gopuram" />
+    <path d="M-25,-62 L25,-62 L23,-50 L-23,-50 Z" class="gopuram" />
+    <path d="M-28,-50 L28,-50 L26,-36 L-26,-36 Z" class="gopuram" />
+    <path d="M-32,-36 L32,-36 L30,-20 L-30,-20 Z" class="gopuram" />
+    <path d="M-36,-20 L36,-20 L34,-2 L-34,-2 Z" class="gopuram" />
+    <path d="M-40,-2 L40,-2 L38,18 L-38,18 Z" class="gopuram" />
+    <path d="M-45,18 L45,18 L43,36 L-43,36 Z" class="gopuram" />
+
+    <!-- Center Arch Gateway -->
+    <path d="M-12,36 L-12,14 C-12,4 12,4 12,14 L12,36 Z" class="gopuram-fill" />
+
+    <!-- Tier Detail Windows -->
+    <rect x="-12" y="-68" width="5" height="4" class="gopuram-fill"/>
+    <rect x="7" y="-68" width="5" height="4" class="gopuram-fill"/>
+
+    <rect x="-14" y="-58" width="6" height="5" class="gopuram-fill"/>
+    <rect x="8" y="-58" width="6" height="5" class="gopuram-fill"/>
+
+    <rect x="-16" y="-46" width="7" height="6" class="gopuram-fill"/>
+    <rect x="9" y="-46" width="7" height="6" class="gopuram-fill"/>
+
+    <rect x="-18" y="-32" width="8" height="7" class="gopuram-fill"/>
+    <rect x="10" y="-32" width="8" height="7" class="gopuram-fill"/>
+
+    <rect x="-20" y="-16" width="9" height="8" class="gopuram-fill"/>
+    <rect x="11" y="-16" width="9" height="8" class="gopuram-fill"/>
+
+    <!-- Indian National Flag Crest (Rising Sun Rays background) -->
+    <path d="M-38,36 L38,36" stroke="#000" stroke-width="3" />
+  </g>
+
+  <!-- Lion Capital (Ashoka Lions) Top Silhouette -->
+  <g transform="translate(150, 72) scale(0.6)">
+    <!-- Lion Head Left -->
+    <path d="M-22,-20 C-30,-15 -28,0 -20,10 C-15,15 -10,18 -5,18 L0,18 L5,18 C10,18 15,15 20,10 C28,0 26,-15 22,-20 C18,-24 10,-26 0,-26 C-10,-26 -18,-24 -22,-20 Z" class="lion-top" />
+    <!-- Center Lion -->
+    <circle cx="0" cy="-28" r="8" class="lion-top" />
+    <!-- Ashoka Chakra Base -->
+    <rect x="-25" y="18" width="50" height="8" rx="2" class="lion-top" />
+    <circle cx="0" cy="22" r="3" fill="#fff" />
+  </g>
+</svg>

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { DocumentPreview } from '../common/DocumentPreview';
 import { StatusBadge } from '../common/StatusBadge';
+import { generatePattaPDF } from '../../services/pdfService';
 import {
   ArrowLeft,
   MapPin,
@@ -42,47 +43,8 @@ export const CitizenDocumentDetails: React.FC = () => {
 
   const doc = selectedDocument;
 
-  const handleDownloadCertificate = () => {
-    const certText = `====================================================================
-GOVERNMENT OF KARNATAKA - REVENUE DEPARTMENT & CADASTRE DIVISION
-DIGITAL LAND PASSBOOK & CERTIFIED TITLE DEED
-====================================================================
-
-Document Registration Ref : ${doc.documentNumber}
-Survey Number            : ${doc.surveyNumber}
-Registered Owner         : ${doc.ownerName}
-Village & Taluk          : ${doc.village}, ${doc.taluk}
-District                 : ${doc.district}
-Total Extent / Land Area : ${doc.landArea}
-Document Type            : ${doc.documentType}
-Submission Date          : ${doc.submissionDate}
-Verification Status      : ${doc.status}
-
---------------------------------------------------------------------
-DIGITAL SIGNATURE & AUDIT TRAIL DETAILS
---------------------------------------------------------------------
-Signer Name              : ${doc.digitalSignature?.signerName || 'Dr. V. Narayanan'}
-Designation              : ${doc.digitalSignature?.signerDesignation || 'Sub-Registrar & Revenue Divisional Officer'}
-Certificate ID           : ${doc.digitalSignature?.certificateId || 'DSC-2026-88129'}
-Digital Signature Hash   : ${doc.digitalSignature?.signatureHash || 'SHA256:a9f8b2c4e6d7e8f9'}
-Date Certified           : ${doc.digitalSignature?.signDate || doc.submissionDate}
-Verification Portal URL  : ${doc.digitalSignature?.verificationUrl || 'https://landrecords.gov.in/verify/dsign'}
-
---------------------------------------------------------------------
-CADASTRAL SPATIAL INTEGRITY
---------------------------------------------------------------------
-GIS Parcel Polygon ID    : ${doc.gisParcel?.parcelId || 'P-1243'}
-Road Access Validated    : ${doc.gisParcel?.roadAccess ? 'YES (State Highway / Access Path)' : 'NO'}
-Waterbody Encroachment  : CLEAR (Buffer Rule Passed)
-
-This digital record is cryptographically sealed under the Information Technology Act & Karnataka Land Revenue Code.
-====================================================================`;
-
-    downloadFile(
-      `Certified_Land_Passbook_${doc.surveyNumber.replace('/', '_')}.txt`,
-      certText,
-      'text/plain;charset=utf-8'
-    );
+  const handleDownloadCertificate = async () => {
+    await generatePattaPDF(doc);
   };
 
   const handleSendQuery = (e: React.FormEvent) => {
@@ -201,7 +163,7 @@ This digital record is cryptographically sealed under the Information Technology
             className="px-3.5 py-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold flex items-center gap-1.5 shrink-0 shadow-xs"
           >
             <Download className="w-3.5 h-3.5" />
-            <span>Download Certified Passbook</span>
+            <span>Download Patta PDF</span>
           </button>
         </div>
       )}
