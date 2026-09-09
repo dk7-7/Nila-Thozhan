@@ -64,7 +64,7 @@ export interface OcrPipelineState {
 export const PIPELINE_STAGES: { stage: OcrPipelineStage; title: string; desc: string }[] = [
   { stage: 'uploading',     title: 'Uploading',          desc: 'Receiving high-resolution deed pages' },
   { stage: 'preprocessing', title: 'Preprocessing',      desc: 'Binarization, deskewing & Tamil font smoothing' },
-  { stage: 'ocr',           title: 'OCR / HTR',          desc: 'Gemini Vision — Tamil & English optical recognition' },
+  { stage: 'ocr',           title: 'OCR / HTR',          desc: 'AI Vision — Tamil & English optical recognition' },
   { stage: 'extraction',    title: 'Field Extraction',   desc: 'Extracting Patta, Boundaries & Cadastral Schema' },
   { stage: 'confidence',    title: 'Confidence Analysis', desc: 'Tamil script & boundary coordinate validation' },
   { stage: 'validation',    title: 'Validation',         desc: 'Deterministic cross-check against cadastral registry' },
@@ -307,7 +307,7 @@ async function simulateDemoPipeline(
   isNoKey: boolean,
 ): Promise<void> {
   const steps: Array<{ stage: OcrPipelineStage; stageIndex: number; message: string; ms: number }> = [
-    { stage: 'ocr',        stageIndex: 2, message: isNoKey ? 'No API key — running Tamil extraction mode' : 'Gemini Vision OCR in progress...', ms: 700 },
+    { stage: 'ocr',        stageIndex: 2, message: isNoKey ? 'No API key — running Tamil extraction mode' : 'AI Vision OCR in progress...', ms: 700 },
     { stage: 'extraction', stageIndex: 3, message: 'Parsing Tamil deed structure & cadastral entities...', ms: 600 },
     { stage: 'confidence', stageIndex: 4, message: 'Computing script confidence & boundary coordinates...', ms: 500 },
     { stage: 'validation', stageIndex: 5, message: 'Cross-checking Tamil Nadu cadastral registry...',      ms: 500 },

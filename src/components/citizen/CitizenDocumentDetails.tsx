@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 
 export const CitizenDocumentDetails: React.FC = () => {
-  const { selectedDocument, navigateTo, selectParcel, downloadFile, addCitizenQuery } = useApp();
+  const { selectedDocument, navigateTo, selectParcel, downloadFile, addCitizenQuery, t } = useApp();
 
   const [isQueryModalOpen, setIsQueryModalOpen] = useState(false);
   const [querySubject, setQuerySubject] = useState('');
@@ -30,12 +30,12 @@ export const CitizenDocumentDetails: React.FC = () => {
   if (!selectedDocument) {
     return (
       <div className="p-8 text-center bg-white rounded-xl border border-slate-200">
-        <p className="text-slate-600">No document selected.</p>
+        <p className="text-slate-600">{t('noDocsFound', 'No document selected.')}</p>
         <button
           onClick={() => navigateTo('my-documents')}
           className="mt-3 px-4 py-2 bg-blue-700 text-white rounded-lg text-xs font-semibold"
         >
-          Return to My Documents
+          {t('back', 'Return to My Documents')}
         </button>
       </div>
     );

@@ -415,7 +415,7 @@ export const OfficerUploadPage: React.FC = () => {
         </h1>
         {!isPipelinePhase && (
           <p className="text-xs sm:text-sm text-slate-500 mt-1">
-            Upload official revenue deeds (PDF, JPG, PNG, TIFF up to 25 MB). Gemini Vision extracts structured attributes, then the 4-stage processing pipeline launches automatically.
+            Upload official revenue deeds (PDF, JPG, PNG, TIFF up to 25 MB). AI Vision OCR extracts structured attributes, then the 4-stage processing pipeline launches automatically.
           </p>
         )}
       </div>
@@ -516,7 +516,7 @@ export const OfficerUploadPage: React.FC = () => {
           <div>
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 uppercase tracking-wide mb-2">OCR Extraction Complete</span>
             <h2 className="text-xl font-bold text-slate-900 mt-1">{ocrResult.documentType.value||'Land Deed'} — {ocrResult.overallConfidence}% Confidence</h2>
-            <p className="text-sm text-slate-500 mt-1">Gemini Vision extracted all 8 fields. Launching processing pipeline in <strong className="text-blue-700 text-base">{countdown}s</strong>…</p>
+            <p className="text-sm text-slate-500 mt-1">AI Vision OCR extracted all 8 fields. Launching processing pipeline in <strong className="text-blue-700 text-base">{countdown}s</strong>…</p>
           </div>
           <div className="flex justify-center">
             <div className="w-48 h-1.5 bg-slate-200 rounded-full overflow-hidden">

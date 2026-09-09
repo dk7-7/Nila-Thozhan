@@ -36,6 +36,7 @@ export type PipelineStage = 'digitization' | 'manual-verification' | 'gis-valida
 
 export const ProcessingValidationPage: React.FC = () => {
   const {
+    t,
     activeTab,
     navigateTo,
     selectedDocument,
@@ -155,7 +156,7 @@ export const ProcessingValidationPage: React.FC = () => {
     const file = files[0];
     setIsUploading(true);
     setUploadProgress(20);
-    setUploadStepLabel('Processing document with Gemini Vision OCR...');
+    setUploadStepLabel('Processing document with AI Vision OCR...');
 
     try {
       const fileUrl = URL.createObjectURL(file);
@@ -230,10 +231,10 @@ export const ProcessingValidationPage: React.FC = () => {
   }, [activeTab, currentDoc?.id]);
 
   const stages: { id: PipelineStage; label: string; stepNumber: number; icon: React.FC<{ className?: string }> }[] = [
-    { id: 'digitization', label: '1. AI Digitization', stepNumber: 1, icon: Sparkles },
-    { id: 'manual-verification', label: '2. Manual Verification', stepNumber: 2, icon: UserCheck },
-    { id: 'gis-validation', label: '3. GIS Validation', stepNumber: 3, icon: FileCheck2 },
-    { id: 'approvals', label: '4. Review & Decision', stepNumber: 4, icon: CheckSquare },
+    { id: 'digitization', label: t('stage1Title', '1. AI Digitization'), stepNumber: 1, icon: Sparkles },
+    { id: 'manual-verification', label: t('stage2Title', '2. Manual Verification'), stepNumber: 2, icon: UserCheck },
+    { id: 'gis-validation', label: t('stage3Title', '3. GIS Validation'), stepNumber: 3, icon: FileCheck2 },
+    { id: 'approvals', label: t('stage4Title', '4. Review & Decision'), stepNumber: 4, icon: CheckSquare },
   ];
 
   const handleStageSelect = (stageId: PipelineStage) => {
@@ -259,15 +260,15 @@ export const ProcessingValidationPage: React.FC = () => {
         <div className="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mx-auto">
           <FileText className="w-6 h-6" />
         </div>
-        <h2 className="text-xl font-bold text-slate-800">No Documents in Ingestion & Processing Queue</h2>
+        <h2 className="text-xl font-bold text-slate-800">{t('noDocsInIngestionQueue', 'No Documents in Ingestion & Processing Queue')}</h2>
         <p className="text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
-          There are currently no land documents undergoing verification. Upload a new land document deed or survey Patta to begin the automated OCR and GIS verification pipeline.
+          {t('noDocsIngestionDesc', 'There are currently no land documents undergoing verification. Upload a new land document deed or survey Patta to begin the automated OCR and GIS verification pipeline.')}
         </p>
         <button
           onClick={() => navigateTo('upload')}
           className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-xs"
         >
-          Upload New Document
+          {t('uploadNewDocument', 'Upload New Document')}
         </button>
       </div>
     );
@@ -280,29 +281,29 @@ export const ProcessingValidationPage: React.FC = () => {
         <div>
           <div className="flex items-center gap-2 text-xs font-bold text-blue-700 uppercase tracking-wide">
             <Sparkles className="w-4 h-4" />
-            <span>Unified Processing & Validation Workstation</span>
+            <span>{t('unifiedProcessingWorkstation', 'Unified Processing & Validation Workstation')}</span>
           </div>
           <h1 className="text-xl sm:text-2xl font-bold text-slate-900 mt-1">
-            {currentDoc?.title || 'Land Record Processing'}
+            {currentDoc?.title || t('landRecordProcessing', 'Land Record Processing')}
           </h1>
           <div className="flex flex-wrap items-center gap-3 mt-1.5 text-xs text-slate-500">
-            <span>Doc No: <strong className="font-mono text-slate-800">{currentDoc?.documentNumber}</strong></span>
+            <span>{t('docNoLabel', 'Doc No:')} <strong className="font-mono text-slate-800">{currentDoc?.documentNumber}</strong></span>
             <span>•</span>
-            <span>Survey: <strong className="font-mono text-slate-800">{currentDoc?.surveyNumber}</strong></span>
+            <span>{t('surveyLabel', 'Survey:')} <strong className="font-mono text-slate-800">{currentDoc?.surveyNumber}</strong></span>
             <span>•</span>
-            <span>Owner: <strong className="text-slate-800">{currentDoc?.ownerName}</strong></span>
+            <span>{t('ownerLabel', 'Owner:')} <strong className="text-slate-800">{currentDoc?.ownerName}</strong></span>
             <span>•</span>
-            <span>Location: <span className="text-slate-700">{currentDoc?.village || '—'}, {currentDoc?.district || '—'}</span></span>
+            <span>{t('locationLabel', 'Location:')} <span className="text-slate-700">{currentDoc?.village || '—'}, {currentDoc?.district || '—'}</span></span>
             {currentDoc?.landArea && (
               <>
                 <span>•</span>
-                <span>Area: <strong className="text-slate-800">{currentDoc.landArea}</strong></span>
+                <span>{t('areaLabel', 'Area:')} <strong className="text-slate-800">{currentDoc.landArea}</strong></span>
               </>
             )}
           </div>
         </div>
 
-        {/* Status and Action Buttons (Active Record mock switcher removed) */}
+        {/* Status and Action Buttons */}
         <div className="flex items-center gap-3 shrink-0">
           <StatusBadge status={currentDoc?.status || 'DIGITIZED'} size="sm" />
           <button
@@ -310,12 +311,12 @@ export const ProcessingValidationPage: React.FC = () => {
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold transition-colors"
           >
             <FileUp className="w-3.5 h-3.5" />
-            <span>Upload New Document</span>
+            <span>{t('uploadNewDocument', 'Upload New Document')}</span>
           </button>
         </div>
       </div>
 
-      {/* 4-Step Pipeline Stage Indicator Bar (Non-clickable, step progression enforced via buttons) */}
+      {/* 4-Step Pipeline Stage Indicator Bar */}
       <div id="pipeline-stepper-bar" className="bg-white rounded-xl border border-slate-200 p-2 shadow-xs grid grid-cols-2 sm:grid-cols-4 gap-2 select-none pointer-events-none">
         {stages.map((st) => {
           const isActive = currentStage === st.id;
@@ -335,7 +336,7 @@ export const ProcessingValidationPage: React.FC = () => {
                 <Icon className="w-4 h-4" />
               </div>
               <div className="min-w-0">
-                <span className="block text-[10px] uppercase font-bold opacity-80">Step {st.stepNumber}</span>
+                <span className="block text-[10px] uppercase font-bold opacity-80">{t('stepNumberPrefix', 'Step')} {st.stepNumber}</span>
                 <span className="block text-xs truncate">{st.label}</span>
               </div>
             </div>
@@ -356,10 +357,10 @@ export const ProcessingValidationPage: React.FC = () => {
               </div>
               <div>
                 <h2 className="text-sm sm:text-base font-bold text-slate-900">
-                  Document Files & Intelligent Ingestion
+                  {t('docFilesIntelligentIngestion', 'Document Files & Intelligent Ingestion')}
                 </h2>
                 <p className="text-xs text-slate-500">
-                  Upload deed scans, survey sketches, or revenue RTCs. The OCR pipeline extracts cadastral attributes instantly.
+                  {t('docFilesDesc', 'Upload deed scans, survey sketches, or revenue RTCs. The OCR pipeline extracts cadastral attributes instantly.')}
                 </p>
               </div>
             </div>
@@ -411,20 +412,18 @@ export const ProcessingValidationPage: React.FC = () => {
                 <UploadCloud className="w-6 h-6" />
               </div>
               <h3 className="text-xs sm:text-sm font-bold text-slate-900">
-                Drag & drop deed scans or <span className="text-blue-700 underline underline-offset-2">browse files</span>
+                {t('dragDropDeedScans', 'Drag & drop deed scans or browse files')}
               </h3>
               <p className="text-[11px] text-slate-500 mt-1 max-w-sm">
-                Supports single or multi-page documents in PDF, TIFF, JPG, or PNG (up to 25MB)
+                {t('supportsFormatsDesc', 'Supports single or multi-page documents in PDF, TIFF, JPG, or PNG (up to 25MB)')}
               </p>
 
               <div className="mt-3.5 flex flex-wrap justify-center gap-1.5 text-[10px] font-medium text-slate-600">
-                <span className="bg-white px-2 py-0.5 rounded border border-slate-200">PDF Deeds</span>
-                <span className="bg-white px-2 py-0.5 rounded border border-slate-200">TIFF Scans</span>
-                <span className="bg-white px-2 py-0.5 rounded border border-slate-200">PNG / JPG Sketches</span>
+                <span className="bg-white px-2 py-0.5 rounded border border-slate-200">{t('pdfDeeds', 'PDF Deeds')}</span>
+                <span className="bg-white px-2 py-0.5 rounded border border-slate-200">{t('tiffScans', 'TIFF Scans')}</span>
+                <span className="bg-white px-2 py-0.5 rounded border border-slate-200">{t('pngJpgSketches', 'PNG / JPG Sketches')}</span>
               </div>
             </div>
-
-
 
             {/* Ingestion Progress Indicator */}
             {isUploading && (
@@ -452,10 +451,10 @@ export const ProcessingValidationPage: React.FC = () => {
               <div className="flex items-center gap-2">
                 <FileText className="w-4 h-4 text-slate-500" />
                 <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700">
-                  Attached Files for Dossier ({attachedFiles.length})
+                  {t('attachedFilesDossier', 'Attached Files for Dossier')} ({attachedFiles.length})
                 </h3>
               </div>
-              <span className="text-[11px] text-slate-400 font-mono">Record: {currentDoc?.documentNumber}</span>
+              <span className="text-[11px] text-slate-400 font-mono">{t('docNoLabel', 'Doc No:')} {currentDoc?.documentNumber}</span>
             </div>
 
             <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
@@ -501,9 +500,9 @@ export const ProcessingValidationPage: React.FC = () => {
             <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-200 flex items-center justify-between text-[11px] text-slate-600">
               <div className="flex items-center gap-1.5">
                 <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                <span>Files digitally notarized & hashed (SHA-256)</span>
+                <span>{t('filesNotarizedSha256', 'Files digitally notarized & hashed (SHA-256)')}</span>
               </div>
-              <span className="font-mono text-slate-400">Total: {attachedFiles.length} files</span>
+              <span className="font-mono text-slate-400">Total: {attachedFiles.length}</span>
             </div>
           </div>
         </div>
@@ -512,14 +511,14 @@ export const ProcessingValidationPage: React.FC = () => {
         <div className="pt-4 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="text-xs text-slate-500 flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
-            <span>All attached documents prepared for optical extraction & cadastral verification</span>
+            <span>{t('allAttachedDocsReady', 'All attached documents prepared for optical extraction & cadastral verification')}</span>
           </div>
           <button
             id="btn-redirect-to-verification"
             onClick={() => setCurrentStage('manual-verification')}
             className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-blue-700 hover:bg-blue-800 text-white text-xs sm:text-sm font-semibold transition-colors shadow-xs"
           >
-            <span>Proceed to Step 2: Manual Verification</span>
+            <span>{t('proceedToManualVerification', 'Proceed to Step 2: Manual Verification')}</span>
             <ArrowRight className="w-4 h-4" />
           </button>
         </div>
@@ -532,10 +531,10 @@ export const ProcessingValidationPage: React.FC = () => {
             <div className="lg:col-span-6 space-y-2">
               <div className="flex items-center justify-between">
                 <h3 className="text-xs font-bold uppercase tracking-wider text-slate-600">
-                  {currentDoc?.fileName ? `Uploaded Document: ${currentDoc.fileName}` : 'Registered Deed Scan (Page 1)'}
+                  {currentDoc?.fileName ? `${currentDoc.fileName}` : t('registeredDeedScan', 'Registered Deed Scan (Page 1)')}
                 </h3>
                 <span className="text-[11px] text-slate-400 font-mono">
-                  {currentDoc?.fileUrl ? 'Source: Uploaded Document' : 'OCR Engine: Gemini Vision OCR'}
+                  {currentDoc?.fileUrl ? t('uploadedDocSource', 'Source: Uploaded Document') : t('ocrVisionEngine', 'OCR Engine: AI Vision OCR')}
                 </span>
               </div>
               {currentDoc?.fileUrl ? (
@@ -571,7 +570,7 @@ export const ProcessingValidationPage: React.FC = () => {
                   <div className="flex items-center gap-2">
                     <Sparkles className="w-4 h-4 text-blue-600" />
                     <h3 className="text-sm font-bold text-slate-900">
-                      Automated Ingestion Quality Score
+                      {t('automatedIngestionQuality', 'Automated Ingestion Quality Score')}
                     </h3>
                   </div>
                   <StatusBadge status={currentDoc.overallConfidence} size="sm" />
@@ -594,7 +593,7 @@ export const ProcessingValidationPage: React.FC = () => {
                   </span>
                 </div>
                 <p className="text-xs text-slate-500">
-                  Extracted via deep-learning optical character recognition with biometric Kannada & English lexicon modeling.
+                  {t('lexiconModelDesc', 'Extracted via deep-learning optical character recognition with bilingual lexicon modeling.')}
                 </p>
               </div>
 
@@ -602,9 +601,9 @@ export const ProcessingValidationPage: React.FC = () => {
               <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs space-y-4">
                 <div className="flex items-center justify-between border-b border-slate-200 pb-3">
                   <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700">
-                    Extracted Deed Attributes
+                    {t('extractedDeedAttributes', 'Extracted Deed Attributes')}
                   </h4>
-                  <span className="text-[11px] text-slate-400">Click to focus on deed image</span>
+                  <span className="text-[11px] text-slate-400">{t('clickToFocusImage', 'Click to focus on deed image')}</span>
                 </div>
 
                 <div className="space-y-2 text-xs">
@@ -625,7 +624,7 @@ export const ProcessingValidationPage: React.FC = () => {
                           <span className="font-semibold text-slate-600">{field.fieldName}</span>
                           <div className="flex items-center gap-2">
                             <span className="text-[10px] font-mono text-slate-400">
-                              {field.confidenceScore}% confidence
+                              {field.confidenceScore}%
                             </span>
                             <StatusBadge status={field.confidence} size="sm" />
                           </div>
@@ -683,7 +682,7 @@ export const ProcessingValidationPage: React.FC = () => {
                   onClick={() => selectDocument(currentDoc.id)}
                   className="px-4 py-2 rounded-lg border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-semibold"
                 >
-                  Refresh OCR Extraction
+                  {t('refreshOcr', 'Refresh OCR Extraction')}
                 </button>
 
                 <button
@@ -691,7 +690,7 @@ export const ProcessingValidationPage: React.FC = () => {
                   onClick={() => setCurrentStage('manual-verification')}
                   className="px-5 py-2.5 rounded-lg bg-blue-700 hover:bg-blue-800 text-white text-xs sm:text-sm font-semibold transition-colors flex items-center gap-1.5 shadow-xs"
                 >
-                  <span>Proceed to Manual Verification</span>
+                  <span>{t('proceedToManualVerification', 'Proceed to Step 2: Manual Verification')}</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
@@ -725,13 +724,13 @@ export const ProcessingValidationPage: React.FC = () => {
             <div className="border-b border-slate-200 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <span className="text-xs font-bold uppercase tracking-wider text-emerald-700 bg-emerald-100 px-2.5 py-0.5 rounded-full">
-                  Stage 4: Officer Decision
+                  {t('stage4OfficerDecision', 'Stage 4: Officer Decision')}
                 </span>
                 <h2 className="text-xl font-bold text-slate-900 mt-1">
-                  Final Cross-Verification & Recommendation
+                  {t('finalCrossVerification', 'Final Cross-Verification & Recommendation')}
                 </h2>
                 <p className="text-xs text-slate-500">
-                  Consolidate the AI extraction, manual corrections, and cadastral spatial checks to approve or reject this registration.
+                  {t('finalCrossVerificationSub', 'Consolidate the AI extraction, manual corrections, and cadastral spatial checks to approve or reject this registration.')}
                 </p>
               </div>
 
@@ -743,7 +742,7 @@ export const ProcessingValidationPage: React.FC = () => {
               <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
                 <div className="flex items-center gap-2 text-xs font-bold text-slate-800">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                  <span>1. AI Extraction</span>
+                  <span>{t('aiExtractionPillar', '1. AI Extraction')}</span>
                 </div>
                 <div className="text-xs text-slate-600 space-y-1">
                   <div>Confidence: <strong className="text-slate-900">{currentDoc.confidenceScore}%</strong></div>
@@ -755,7 +754,7 @@ export const ProcessingValidationPage: React.FC = () => {
               <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
                 <div className="flex items-center gap-2 text-xs font-bold text-slate-800">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                  <span>2. Manual Checklist</span>
+                  <span>{t('manualChecklistPillar', '2. Manual Checklist')}</span>
                 </div>
                 <div className="text-xs text-slate-600 space-y-1">
                   <div>Survey No: <strong className="font-mono text-slate-900">{currentDoc.surveyNumber}</strong></div>
@@ -771,7 +770,7 @@ export const ProcessingValidationPage: React.FC = () => {
                   ) : (
                     <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                   )}
-                  <span>3. GIS Cadastre</span>
+                  <span>{t('gisCadastrePillar', '3. GIS Cadastre')}</span>
                 </div>
                 <div className="text-xs text-slate-600 space-y-1">
                   <div>Parcel Match: <strong className="font-mono text-slate-900">{currentDoc.gisParcel?.parcelId || 'P-1243'}</strong></div>
@@ -788,23 +787,23 @@ export const ProcessingValidationPage: React.FC = () => {
                   <CheckCircle2 className="w-7 h-7" />
                 </div>
                 <h3 className="text-lg font-bold text-emerald-900">
-                  Officer Recommendation Recorded
+                  {t('officerRecRecorded', 'Officer Recommendation Recorded')}
                 </h3>
                 <p className="text-xs text-emerald-800 max-w-md mx-auto">
-                  Action <strong>{decisionAction}</strong> has been logged to the state immutable audit ledger. Document is now queued for executive digital signature.
+                  {t('recordedLedgerDesc', 'Action has been logged to the state immutable audit ledger. Document is now queued for executive digital signature.')}
                 </p>
                 <div className="flex items-center justify-center gap-3 pt-2">
                   <button
                     onClick={() => navigateTo('queue')}
                     className="px-4 py-2 rounded-lg bg-blue-700 hover:bg-blue-800 text-white text-xs font-semibold"
                   >
-                    Return to Document Queue
+                    {t('returnToQueue', 'Return to Document Queue')}
                   </button>
                   <button
                     onClick={() => navigateTo('final-approval', currentDoc.id)}
                     className="px-4 py-2 rounded-lg border border-slate-300 hover:bg-white text-slate-800 text-xs font-semibold flex items-center gap-1.5"
                   >
-                    <span>Proceed to D-Sign</span>
+                    <span>{t('proceedToDSign', 'Proceed to D-Sign')}</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                 </div>
@@ -812,7 +811,7 @@ export const ProcessingValidationPage: React.FC = () => {
             ) : (
               <div className="space-y-4 pt-2">
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
-                  Select Officer Decision Action
+                  {t('selectOfficerDecisionAction', 'Select Officer Decision Action')}
                 </label>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <button
@@ -826,10 +825,10 @@ export const ProcessingValidationPage: React.FC = () => {
                   >
                     <div className="font-bold text-xs sm:text-sm flex items-center gap-1.5">
                       <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                      <span>Approve & Recommend Seal</span>
+                      <span>{t('approveAndRecommendSeal', 'Approve & Recommend Seal')}</span>
                     </div>
                     <p className="text-[11px] text-slate-500 mt-1">
-                      Deed verified against Bhoomi and GIS cadastre. Ready for final sign-off.
+                      {t('approveSealDesc', 'Deed verified against Bhoomi and GIS cadastre. Ready for final sign-off.')}
                     </p>
                   </button>
 
@@ -844,10 +843,10 @@ export const ProcessingValidationPage: React.FC = () => {
                   >
                     <div className="font-bold text-xs sm:text-sm flex items-center gap-1.5">
                       <Clock className="w-4 h-4 text-amber-600" />
-                      <span>Return with Queries</span>
+                      <span>{t('returnWithQueries', 'Return with Queries')}</span>
                     </div>
                     <p className="text-[11px] text-slate-500 mt-1">
-                      Request additional boundary clarification or survey proof from citizen.
+                      {t('returnQueriesDesc', 'Request additional boundary clarification or survey proof from citizen.')}
                     </p>
                   </button>
 
@@ -862,17 +861,17 @@ export const ProcessingValidationPage: React.FC = () => {
                   >
                     <div className="font-bold text-xs sm:text-sm flex items-center gap-1.5">
                       <AlertTriangle className="w-4 h-4 text-red-600" />
-                      <span>Reject Application</span>
+                      <span>{t('rejectApplication', 'Reject Application')}</span>
                     </div>
                     <p className="text-[11px] text-slate-500 mt-1">
-                      Fatal discrepancy or disputed revenue title. Document rejected.
+                      {t('rejectAppDesc', 'Fatal discrepancy or disputed revenue title. Document rejected.')}
                     </p>
                   </button>
                 </div>
 
                 <div className="space-y-1.5">
                   <label className="block text-xs font-semibold text-slate-700">
-                    Official Verification Notes & Citation
+                    {t('officialNotesCitation', 'Official Verification Notes & Citation')}
                   </label>
                   <textarea
                     rows={3}
@@ -888,7 +887,7 @@ export const ProcessingValidationPage: React.FC = () => {
                     onClick={() => setCurrentStage('gis-validation')}
                     className="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 text-xs font-semibold hover:bg-slate-50"
                   >
-                    Review GIS Details Again
+                    {t('reviewGisAgain', 'Review GIS Details Again')}
                   </button>
                   <button
                     id="btn-submit-decision"
@@ -896,7 +895,7 @@ export const ProcessingValidationPage: React.FC = () => {
                     className="px-6 py-2.5 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-xs sm:text-sm font-semibold transition-colors flex items-center gap-2 shadow-xs"
                   >
                     <ShieldCheck className="w-4 h-4" />
-                    <span>Submit Official Decision</span>
+                    <span>{t('submitOfficialDecision', 'Submit Official Decision')}</span>
                   </button>
                 </div>
               </div>

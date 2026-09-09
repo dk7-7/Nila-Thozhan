@@ -19,8 +19,23 @@ export const PattaPdfTemplate: React.FC<PattaPdfTemplateProps> = ({ document: do
   // Owner Name (Tamil preference with English fallback)
   const ownerName = doc.cadastralDetails?.tamilOwnerName || doc.ownerName || 'திரு M. செல்வராஜ்';
 
-  // Determine land classification & table rows
-  const surveyNo = doc.surveyNumber || '124/3A';
+  // Extract Survey Number & Subdivision
+  const rawSurvey = doc.surveyNumber || '124/3A';
+  let survey_no = rawSurvey;
+  let subdivision = '';
+
+  if (rawSurvey.includes('/')) {
+    const parts = rawSurvey.split('/');
+    survey_no = parts[0].trim();
+    subdivision = parts.slice(1).join('/').trim();
+  } else if (rawSurvey.includes('-')) {
+    const parts = rawSurvey.split('-');
+    survey_no = parts[0].trim();
+    subdivision = parts.slice(1).join('-').trim();
+  }
+
+  const survey_no_subdivision = subdivision ? `${survey_no}-${subdivision}` : survey_no;
+
   const rawArea = doc.landArea || `${doc.landAreaNumeric || 2.45} ஏக்கர்`;
   const numericArea = doc.landAreaNumeric || 2.45;
 
@@ -35,35 +50,21 @@ export const PattaPdfTemplate: React.FC<PattaPdfTemplateProps> = ({ document: do
     isNanjai = true;
   }
 
-  // Format Area string (Hectares / Ares / Acres)
+  // Format Area string and Assessment value
   const formattedArea = rawArea;
-  // Assessment value calculation (Tamil Nadu standard land revenue assessment per acre/hectare)
   const estimatedAssessment = (numericArea * 14.5).toFixed(2);
 
-  // Table row data structure
-  const rows = [
-    {
-      sno: 1,
-      surveyNumber: surveyNo,
-      nanjaiArea: isNanjai ? formattedArea : '-',
-      nanjaiAssessment: isNanjai ? `₹ ${estimatedAssessment}` : '-',
-      punjaiArea: isPunjai ? formattedArea : '-',
-      punjaiAssessment: isPunjai ? `₹ ${estimatedAssessment}` : '-',
-      otherArea: (!isNanjai && !isPunjai) ? formattedArea : '-',
-      otherAssessment: (!isNanjai && !isPunjai) ? `₹ ${estimatedAssessment}` : '-',
-      remarks: doc.officerNotes || 'நிலவுரிமை பட்டா விவரம் சரிபார்க்கப்பட்டது',
-    },
-  ];
+  // Template placeholders values
+  const nanjai_area = isNanjai ? formattedArea : '-';
+  const nanjai_assessment = isNanjai ? `₹ ${estimatedAssessment}` : '-';
 
-  // Totals computation
-  const totalNanjaiArea = isNanjai ? formattedArea : '0.00';
-  const totalNanjaiAssessment = isNanjai ? `₹ ${estimatedAssessment}` : '₹ 0.00';
-  
-  const totalPunjaiArea = isPunjai ? formattedArea : '0.00';
-  const totalPunjaiAssessment = isPunjai ? `₹ ${estimatedAssessment}` : '₹ 0.00';
+  const punjai_area = isPunjai ? formattedArea : '-';
+  const punjai_assessment = isPunjai ? `₹ ${estimatedAssessment}` : '-';
 
-  const totalOtherArea = (!isNanjai && !isPunjai) ? formattedArea : '0.00';
-  const totalOtherAssessment = (!isNanjai && !isPunjai) ? `₹ ${estimatedAssessment}` : '₹ 0.00';
+  const other_area = (!isNanjai && !isPunjai) ? formattedArea : '-';
+  const other_assessment = (!isNanjai && !isPunjai) ? `₹ ${estimatedAssessment}` : '-';
+
+  const remarks = doc.officerNotes || 'நிலவுரிமை பட்டா விவரம் சரிபார்க்கப்பட்டது';
 
   // Digital Signature Details
   const sigDateStr = doc.digitalSignature?.signDate || doc.submissionDate || new Date().toISOString().split('T')[0];
@@ -171,13 +172,13 @@ export const PattaPdfTemplate: React.FC<PattaPdfTemplateProps> = ({ document: do
         </div>
 
         {/* ================================================== */}
-        {/* 4. LAND DETAILS TABLE                              */}
+        {/* 4. LAND DETAILS TABLE (PATTA TABLE — REUSABLE FORMAT) */}
         {/* ================================================== */}
         <table
           style={{
             width: '100%',
             borderCollapse: 'collapse',
-            border: '1px solid #000000',
+            border: '1.5px solid #000000',
             marginBottom: '20px',
             fontSize: '12px',
             textAlign: 'center',
@@ -186,69 +187,68 @@ export const PattaPdfTemplate: React.FC<PattaPdfTemplateProps> = ({ document: do
           <thead>
             {/* Header Tier 1 */}
             <tr style={{ backgroundColor: '#f0f0f0' }}>
-              <th rowSpan={2} style={{ border: '1px solid #000000', padding: '6px 4px', width: '6%' }}>
+              <th rowSpan={2} style={{ border: '1px solid #000000', padding: '6px 4px', width: '6%', fontWeight: 'bold' }}>
                 வ.எண்
               </th>
-              <th rowSpan={2} style={{ border: '1px solid #000000', padding: '6px 4px', width: '22%' }}>
+              <th rowSpan={2} style={{ border: '1px solid #000000', padding: '6px 4px', width: '22%', fontWeight: 'bold' }}>
                 புல எண் மற்றும் உட்பிரிவு
               </th>
-              <th colSpan={2} style={{ border: '1px solid #000000', padding: '6px 4px', width: '24%' }}>
+              <th colSpan={2} style={{ border: '1px solid #000000', padding: '6px 4px', width: '24%', fontWeight: 'bold' }}>
                 நன்செய்
               </th>
-              <th colSpan={2} style={{ border: '1px solid #000000', padding: '6px 4px', width: '24%' }}>
+              <th colSpan={2} style={{ border: '1px solid #000000', padding: '6px 4px', width: '24%', fontWeight: 'bold' }}>
                 புன்செய்
               </th>
-              <th colSpan={2} style={{ border: '1px solid #000000', padding: '6px 4px', width: '14%' }}>
+              <th colSpan={2} style={{ border: '1px solid #000000', padding: '6px 4px', width: '14%', fontWeight: 'bold' }}>
                 மற்றவை
               </th>
-              <th rowSpan={2} style={{ border: '1px solid #000000', padding: '6px 4px', width: '10%' }}>
+              <th rowSpan={2} style={{ border: '1px solid #000000', padding: '6px 4px', width: '10%', fontWeight: 'bold' }}>
                 குறிப்பு
               </th>
             </tr>
             {/* Header Tier 2 */}
             <tr style={{ backgroundColor: '#f0f0f0' }}>
-              <th style={{ border: '1px solid #000000', padding: '5px 4px' }}>பரப்பு</th>
-              <th style={{ border: '1px solid #000000', padding: '5px 4px' }}>தீர்வை</th>
-              <th style={{ border: '1px solid #000000', padding: '5px 4px' }}>பரப்பு</th>
-              <th style={{ border: '1px solid #000000', padding: '5px 4px' }}>தீர்வை</th>
-              <th style={{ border: '1px solid #000000', padding: '5px 4px' }}>பரப்பு</th>
-              <th style={{ border: '1px solid #000000', padding: '5px 4px' }}>தீர்வை</th>
+              <th style={{ border: '1px solid #000000', padding: '5px 4px', fontWeight: 'bold' }}>பரப்பு</th>
+              <th style={{ border: '1px solid #000000', padding: '5px 4px', fontWeight: 'bold' }}>தீர்வை</th>
+              <th style={{ border: '1px solid #000000', padding: '5px 4px', fontWeight: 'bold' }}>பரப்பு</th>
+              <th style={{ border: '1px solid #000000', padding: '5px 4px', fontWeight: 'bold' }}>தீர்வை</th>
+              <th style={{ border: '1px solid #000000', padding: '5px 4px', fontWeight: 'bold' }}>பரப்பு</th>
+              <th style={{ border: '1px solid #000000', padding: '5px 4px', fontWeight: 'bold' }}>தீர்வை</th>
             </tr>
           </thead>
           <tbody>
-            {/* Dynamic Data Rows */}
-            {rows.map((row) => (
-              <tr key={row.sno}>
-                <td style={{ border: '1px solid #000000', padding: '8px 4px' }}>{row.sno}</td>
-                <td style={{ border: '1px solid #000000', padding: '8px 4px', fontWeight: 'bold' }}>
-                  {row.surveyNumber}
-                </td>
-                <td style={{ border: '1px solid #000000', padding: '8px 4px' }}>{row.nanjaiArea}</td>
-                <td style={{ border: '1px solid #000000', padding: '8px 4px' }}>{row.nanjaiAssessment}</td>
-                <td style={{ border: '1px solid #000000', padding: '8px 4px' }}>{row.punjaiArea}</td>
-                <td style={{ border: '1px solid #000000', padding: '8px 4px' }}>{row.punjaiAssessment}</td>
-                <td style={{ border: '1px solid #000000', padding: '8px 4px' }}>{row.otherArea}</td>
-                <td style={{ border: '1px solid #000000', padding: '8px 4px' }}>{row.otherAssessment}</td>
-                <td style={{ border: '1px solid #000000', padding: '8px 4px', fontSize: '11px' }}>
-                  {row.remarks}
-                </td>
-              </tr>
-            ))}
+            {/* Data Row with replaced template placeholders */}
+            <tr>
+              <td style={{ border: '1px solid #000000', padding: '8px 4px' }}>1</td>
+              <td style={{ border: '1px solid #000000', padding: '8px 4px', fontWeight: 'bold' }}>
+                {survey_no_subdivision}
+              </td>
+              <td style={{ border: '1px solid #000000', padding: '8px 4px' }}>{nanjai_area}</td>
+              <td style={{ border: '1px solid #000000', padding: '8px 4px' }}>{nanjai_assessment}</td>
+              <td style={{ border: '1px solid #000000', padding: '8px 4px' }}>{punjai_area}</td>
+              <td style={{ border: '1px solid #000000', padding: '8px 4px' }}>{punjai_assessment}</td>
+              <td style={{ border: '1px solid #000000', padding: '8px 4px' }}>{other_area}</td>
+              <td style={{ border: '1px solid #000000', padding: '8px 4px' }}>{other_assessment}</td>
+              <td style={{ border: '1px solid #000000', padding: '8px 4px', fontSize: '11px' }}>
+                {remarks}
+              </td>
+            </tr>
 
             {/* ================================================== */}
             {/* 6. TOTAL ROW                                       */}
             {/* ================================================== */}
             <tr style={{ fontWeight: 'bold', backgroundColor: '#f9f9f9' }}>
-              <td colSpan={2} style={{ border: '1px solid #000000', padding: '8px', textAlign: 'right' }}>
+              <td style={{ border: '1px solid #000000', padding: '8px 4px' }}></td>
+              <td style={{ border: '1px solid #000000', padding: '8px 4px', textAlign: 'left', paddingLeft: '8px' }}>
                 மொத்தம் -
               </td>
-              <td style={{ border: '1px solid #000000', padding: '8px 4px' }}>{totalNanjaiArea}</td>
-              <td style={{ border: '1px solid #000000', padding: '8px 4px' }}>{totalNanjaiAssessment}</td>
-              <td style={{ border: '1px solid #000000', padding: '8px 4px' }}>{totalPunjaiArea}</td>
-              <td style={{ border: '1px solid #000000', padding: '8px 4px' }}>{totalPunjaiAssessment}</td>
-              <td style={{ border: '1px solid #000000', padding: '8px 4px' }}>{totalOtherArea}</td>
-              <td style={{ border: '1px solid #000000', padding: '8px 4px' }}>{totalOtherAssessment}</td>
-              <td style={{ border: '1px solid #000000', padding: '8px 4px' }}>-</td>
+              <td style={{ border: '1px solid #000000', padding: '8px 4px' }}>{isNanjai ? nanjai_area : '0.00'}</td>
+              <td style={{ border: '1px solid #000000', padding: '8px 4px' }}>{isNanjai ? nanjai_assessment : '0.00'}</td>
+              <td style={{ border: '1px solid #000000', padding: '8px 4px' }}>{isPunjai ? punjai_area : '0.00'}</td>
+              <td style={{ border: '1px solid #000000', padding: '8px 4px' }}>{isPunjai ? punjai_assessment : '0.00'}</td>
+              <td style={{ border: '1px solid #000000', padding: '8px 4px' }}>{(!isNanjai && !isPunjai) ? other_area : '0.00'}</td>
+              <td style={{ border: '1px solid #000000', padding: '8px 4px' }}>{(!isNanjai && !isPunjai) ? other_assessment : '0.00'}</td>
+              <td style={{ border: '1px solid #000000', padding: '8px 4px' }}></td>
             </tr>
           </tbody>
         </table>

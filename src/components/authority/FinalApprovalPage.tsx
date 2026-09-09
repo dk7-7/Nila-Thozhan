@@ -22,6 +22,7 @@ import {
 
 export const FinalApprovalPage: React.FC = () => {
   const {
+    t,
     selectedDocument,
     documents,
     selectDocument,

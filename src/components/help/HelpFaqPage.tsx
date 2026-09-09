@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 
 export const HelpFaqPage: React.FC = () => {
-  const { submitSupportTicket } = useApp();
+  const { submitSupportTicket, currentLanguage, t } = useApp();
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   // Ticket Form state
@@ -31,7 +31,7 @@ export const HelpFaqPage: React.FC = () => {
       category,
       subject,
       message,
-      contactEmail: contactEmail || 'citizen@karnataka.gov.in',
+      contactEmail: contactEmail || 'citizen@tn.gov.in',
     });
     setTicketSubmittedId(ticketId);
     setSubject('');
@@ -39,41 +39,93 @@ export const HelpFaqPage: React.FC = () => {
     setContactEmail('');
   };
 
-  const faqs = [
-    {
-      q: 'How do I locate my land parcel on the official GIS map using my document?',
-      a: 'Navigate to "File → GIS Location" (or click "Find My Land" on the Citizen dashboard). Scanned deeds or Patta certificates automatically extract the survey number and village name to highlight your exact parcel boundary on the interactive map.',
-    },
-    {
-      q: 'What does "Under Verification" status mean?',
-      a: 'This means your document has been read by the AI OCR engine and is currently undergoing two-step verification: first, a revenue digitization officer verifies the extracted text against historical physical archive volumes; second, the cadastral GIS engine validates the boundaries and road access.',
-    },
-    {
-      q: 'What should I do if my document shows "Needs Attention"?',
-      a: 'Click "View Details" on the document. A clear, plain-language notification box will explain the issue—such as faint handwriting or a survey boundary conflict. You can inspect the discrepancy or provide supporting survey documents if requested by the department.',
-    },
-    {
-      q: 'How do I verify the authenticity of a digitally signed land record?',
-      a: 'Every approved record is cryptographically stamped with a Class 3 Digital Signature and an official QR code. Anyone can scan the QR code or verify the SHA-256 hash against the State Land Cadastre verification portal to confirm the certified title.',
-    },
-    {
-      q: 'How can I switch between Citizen, Officer, and High Authority modes in this portal?',
-      a: 'Click the colored role badge at the top right of the navigation header (e.g., "Citizen", "Officer", or "Approver"). You can switch between all three personas at any time to test the complete end-to-end workflow and role-based permissions.',
-    },
-  ];
+  const getFaqs = () => {
+    if (currentLanguage === 'ta') {
+      return [
+        {
+          q: 'நில வரைபடத்தில் (GIS) எனது நில எல்லையை எவ்வாறு பார்ப்பது?',
+          a: 'பயனர் தளத்தில் "வரைபடத்தில் நிலம் காண" என்பதை கிளிக் செய்யவும். உங்கள் ஆவணத்தில் உள்ள சர்வே எண் மற்றும் கிராமத்தின் அடிப்படையில் வரைபடத்தில் நில எல்லை துல்லியமாக காட்டப்படும்.',
+        },
+        {
+          q: '"பரிசீலனையில் உள்ளது" (Under Review) என்பதன் பொருள் என்ன?',
+          a: 'உங்கள் ஆவணம் AI OCR மூலம் படிக்கப்பட்டு, கிராம நிர்வாக அலுவலர் (VAO) மற்றும் GIS நில எல்லை சரிபார்ப்பில் உள்ளது என்பதை இது குறிக்கிறது.',
+        },
+        {
+          q: '"சரிபார்க்க வேண்டும்" (Action Needed) என்றால் என்ன செய்ய வேண்டும்?',
+          a: 'ஆவண விவரங்களை திறந்து பார்க்கவும். சர்வே எல்லை அல்லது கையெழுத்து தெளிவின்மை போன்ற காரணங்கள் குறிப்பிடப்பட்டிருக்கும்.',
+        },
+        {
+          q: 'டிஜிட்டல் முத்திரையிடப்பட்ட நில ஆவணத்தின் நம்பகத்தன்மையை எவ்வாறு உறுதி செய்வது?',
+          a: 'அங்கீகரிக்கப்பட்ட ஒவ்வொரு ஆவணத்திலும் அதிகாரப்பூர்வ QR குறியீடு மற்றும் SHA-256 கிரிப்டோகிராஃபிக் பாதுகாப்பு குறியீடு இருக்கும். இதை ஸ்கேன் செய்து சரிபார்க்கலாம்.',
+        },
+        {
+          q: 'பொது மக்கள், அலுவலர் மற்றும் மேலதிகாரி முறைகளை எவ்வாறு மாற்றுவது?',
+          a: 'மேல் வலது மூலையில் உள்ள பயனர் பொத்தானை (Citizen / Officer / Approver) கிளிக் செய்து எந்த நேரத்திலும் நிலையை மாற்றிக்கொள்ளலாம்.',
+        },
+      ];
+    }
+    if (currentLanguage === 'hi') {
+      return [
+        {
+          q: 'दस्तावेज के माध्यम से सरकारी GIS नक्शे पर अपनी जमीन कैसे देखें?',
+          a: 'नागरिक डैशबोर्ड पर "नक्शे पर जमीन खोजें" पर क्लिक करें। आपके पट्टे या विलेख से खसरा नंबर स्वतः पढ़कर नक्शे पर सीमाएं प्रदर्शित की जाएंगी।',
+        },
+        {
+          q: '"समीक्षाधीन है" (Under Review) स्थिति का क्या अर्थ है?',
+          a: 'इसका अर्थ है कि आपके दस्तावेज का AI OCR द्वारा अध्ययन कर लिया गया है और अब राजस्व अधिकारी एवं GIS नक्शे द्वारा सत्यापन चल रहा है।',
+        },
+        {
+          q: 'यदि स्थिति "जांच आवश्यक" (Action Needed) दिखाए तो क्या करें?',
+          a: 'दस्तावेज विवरण देखें। वहां सीमा विवाद या अस्पष्ट हस्तलेख के संबंध में स्पष्ट कारण दर्शाया जाएगा।',
+        },
+        {
+          q: 'डिजिटल रूप से हस्ताक्षरित दस्तावेज की सत्यता कैसे जांचें?',
+          a: 'प्रत्येक स्वीकृत दस्तावेज में आधिकारिक QR कोड और SHA-256 हैश सुरक्षित रहता है, जिसे स्कैन करके तुरंत सत्यापित किया जा सकता है।',
+        },
+        {
+          q: 'नागरिक, अधिकारी और उच्चाधिकारी मोड के बीच कैसे स्विच करें?',
+          a: 'नेविगेशन हेडर के शीर्ष दाईं ओर स्थित भूमिका बटन पर क्लिक करके किसी भी समय मोड बदला जा सकता है।',
+        },
+      ];
+    }
+    return [
+      {
+        q: 'How do I locate my land parcel on the official GIS map using my document?',
+        a: 'Navigate to "Find Land on Map" (or click "Find My Land" on the Citizen dashboard). Scanned deeds or Patta certificates automatically extract the survey number and village name to highlight your exact parcel boundary on the interactive map.',
+      },
+      {
+        q: 'What does "Under Review" status mean?',
+        a: 'This means your document has been read by the AI OCR engine and is currently undergoing verification: first, a revenue digitization officer verifies the extracted text against historical records; second, the cadastral GIS engine validates the boundaries and road access.',
+      },
+      {
+        q: 'What should I do if my document shows "Action Needed"?',
+        a: 'Click "View Details" on the document. A notification will explain the issue—such as faint handwriting or a survey boundary conflict. You can inspect the discrepancy or provide supporting survey documents if requested.',
+      },
+      {
+        q: 'How do I verify the authenticity of a digitally signed land record?',
+        a: 'Every approved record is cryptographically stamped with a Class 3 Digital Signature and an official QR code. Anyone can scan the QR code or verify the SHA-256 hash against the State Land Cadastre portal.',
+      },
+      {
+        q: 'How can I switch between Citizen, Officer, and High Authority modes in this portal?',
+        a: 'Click the colored role badge at the top right of the navigation header. You can switch between all three personas at any time to test the complete workflow.',
+      },
+    ];
+  };
+
+  const faqs = getFaqs();
 
   return (
     <div id="help-faq-page" className="max-w-4xl mx-auto space-y-6">
       <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-xs">
         <div className="flex items-center gap-2 text-xs font-bold text-blue-700 uppercase tracking-wide">
           <HelpCircle className="w-4 h-4" />
-          <span>User Assistance & Citizen Guides</span>
+          <span>{t('helpCenter', 'Help Center & Guidance')}</span>
         </div>
         <h1 className="text-xl sm:text-2xl font-bold text-slate-900 mt-1">
-          Help & Frequently Asked Questions
+          {t('frequentlyAskedQuestions', 'Frequently Asked Questions & User Guides')}
         </h1>
         <p className="text-xs sm:text-sm text-slate-500">
-          Everything you need to know about digitized land records, cadastral maps, and digital certification.
+          {t('helpSubtitle', 'Find answers, understand the land digitization workflow, and learn how to use Nila Thozhan.')}
         </p>
       </div>
 

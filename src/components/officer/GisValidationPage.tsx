@@ -27,6 +27,7 @@ import {
 
 export const GisValidationPage: React.FC = () => {
   const {
+    t,
     selectedDocument,
     documents,
     gisParcels,
@@ -117,9 +118,9 @@ export const GisValidationPage: React.FC = () => {
         <div className="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mx-auto">
           <Layers className="w-6 h-6" />
         </div>
-        <h2 className="text-xl font-bold text-slate-800">No GIS Boundaries Pending Validation</h2>
+        <h2 className="text-xl font-bold text-slate-800">{t('noGisBoundariesPending', 'No GIS Boundaries Pending Validation')}</h2>
         <p className="text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
-          There are currently no land document parcels requiring GIS spatial intersection or boundary verification. Upload a new land document to get started.
+          {t('noGisBoundariesDesc', 'There are currently no land document parcels requiring GIS spatial intersection or boundary verification.')}
         </p>
       </div>
     );
@@ -132,23 +133,23 @@ export const GisValidationPage: React.FC = () => {
         <div>
           <div className="flex items-center gap-2">
             <span className="text-xs font-bold uppercase tracking-wider text-blue-800 bg-blue-100 px-2 py-0.5 rounded">
-              Workstation Step 3
+              {t('workstationStep3', 'Workstation Step 3')}
             </span>
             <span className="text-xs text-slate-500 font-medium">
-              GIS Cadastral Cross-Validation
+              {t('gisCadastralCrossValidation', 'GIS Cadastral Cross-Validation')}
             </span>
           </div>
           <h1 className="text-xl sm:text-2xl font-bold text-slate-900 mt-1">
-            Spatial Validation: {currentDoc.title}
+            {currentDoc.title}
           </h1>
           <p className="text-xs sm:text-sm text-slate-500">
-            Compare legal deed attributes with PostGIS cadastral polygon boundary and road topology.
+            {t('gisSpatialValidationDesc', 'Compare legal deed attributes with TNGIS cadastral polygon boundary.')}
           </p>
         </div>
 
         {/* Record Quick Switcher */}
         <div className="flex items-center gap-2 text-xs">
-          <span className="text-slate-500 font-medium">Record:</span>
+          <span className="text-slate-500 font-medium">{t('selectRecordPrompt', 'Select Record:')}</span>
           <select
             value={currentDoc.id}
             onChange={(e) => selectDocument(e.target.value)}
@@ -590,7 +591,7 @@ export const GisValidationPage: React.FC = () => {
           {/* Section 17: Officer Approval Submission Box */}
           <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs space-y-4">
             <h3 className="text-sm font-bold text-slate-900 border-b border-slate-200 pb-2">
-              Officer Recommendation & Forwarding
+              {t('finalDecisionRecommendation', 'Officer Recommendation & Forwarding')}
             </h3>
 
             {/* Officer Confirmation Checkbox (Section 17) */}
@@ -603,7 +604,7 @@ export const GisValidationPage: React.FC = () => {
                 className="mt-0.5 rounded text-blue-600 focus:ring-0 w-4 h-4"
               />
               <span className="text-xs font-semibold text-blue-950 leading-relaxed">
-                I confirm this document matches the official GIS land record and cadastral survey boundaries.
+                {t('confirmGisCheckboxLabel', 'I confirm this document matches the official GIS land record and cadastral survey boundaries.')}
               </span>
             </label>
 
@@ -617,7 +618,7 @@ export const GisValidationPage: React.FC = () => {
                     : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
                 }`}
               >
-                ✓ Recommend for Final Approval
+                {t('recommendForFinalApproval', '✓ Recommend for Final Approval')}
               </button>
 
               <button
@@ -628,7 +629,7 @@ export const GisValidationPage: React.FC = () => {
                     : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
                 }`}
               >
-                ⚠️ Flag for Field Inspection
+                {t('flagForFieldInspection', '⚠️ Flag for Field Inspection')}
               </button>
 
               <button
@@ -639,14 +640,14 @@ export const GisValidationPage: React.FC = () => {
                     : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
                 }`}
               >
-                ✗ Recommend Rejection
+                {t('recommendRejection', '✗ Recommend Rejection')}
               </button>
             </div>
 
             {/* Notes */}
             <div>
               <label className="text-xs font-bold text-slate-700 block mb-1">
-                Recommendation Notes for Sub-Registrar / Approver
+                {t('notesForApprover', 'Recommendation Notes for Sub-Registrar / Approver')}
               </label>
               <textarea
                 value={notes}
@@ -664,7 +665,7 @@ export const GisValidationPage: React.FC = () => {
                 className="px-6 py-2.5 rounded-lg bg-blue-700 hover:bg-blue-800 text-white font-semibold text-xs sm:text-sm shadow-xs transition-colors flex items-center gap-2"
               >
                 <ShieldCheck className="w-4 h-4" />
-                <span>Submit to High Authority</span>
+                <span>{t('submitToHighAuthority', 'Submit to High Authority')}</span>
               </button>
             </div>
           </div>

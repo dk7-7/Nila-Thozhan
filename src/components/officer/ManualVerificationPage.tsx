@@ -22,6 +22,7 @@ import type { CadastralBoundaries } from '../../types';
 
 export const ManualVerificationPage: React.FC = () => {
   const {
+    t,
     selectedDocument,
     documents,
     selectDocument,
@@ -50,7 +51,7 @@ export const ManualVerificationPage: React.FC = () => {
   );
 
   if (!currentDoc) {
-    return <div className="p-8 text-center text-slate-500">No documents found.</div>;
+    return <div className="p-8 text-center text-slate-500">{t('noDocsFound', 'No documents found.')}</div>;
   }
 
   const cadastral = currentDoc.cadastralDetails;
@@ -109,13 +110,13 @@ export const ManualVerificationPage: React.FC = () => {
         <div>
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-xs font-bold uppercase tracking-wider text-amber-800 bg-amber-100 px-2 py-0.5 rounded">
-              Workstation Step 2
+              {t('workstationStep2', 'Workstation Step 2')}
             </span>
             <span className="text-xs text-slate-500 font-medium">
-              Tamil Cadastral & Deed Verification
+              {t('tamilCadastralDeedVerification', 'Cadastral & Deed Verification')}
             </span>
             <span className="text-[11px] font-semibold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full flex items-center gap-1">
-              <Sparkles className="w-3 h-3" /> Tamil Nadu Revenue Suite (TN-RoR)
+              <Sparkles className="w-3 h-3" /> {t('tnRevenueSuite', 'Tamil Nadu Revenue Suite (TN-RoR)')}
             </span>
           </div>
           <h1 className="text-lg sm:text-xl font-bold text-slate-900 mt-1">
@@ -125,7 +126,7 @@ export const ManualVerificationPage: React.FC = () => {
 
         {/* Quick Document Picker */}
         <div className="flex items-center gap-2 text-xs">
-          <span className="text-slate-500 font-medium hidden sm:inline">Select Record:</span>
+          <span className="text-slate-500 font-medium hidden sm:inline">{t('selectRecordPrompt', 'Select Record:')}</span>
           <select
             value={currentDoc.id}
             onChange={(e) => selectDocument(e.target.value)}
@@ -147,7 +148,7 @@ export const ManualVerificationPage: React.FC = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <h2 className="text-xs font-bold uppercase tracking-wider text-slate-600">
-                Original Scanned Document
+                {t('originalScannedDocument', 'Original Scanned Document')}
               </h2>
               {highlightedField && (
                 <span className="text-[10px] font-semibold text-blue-700 bg-blue-100 px-2 py-0.5 rounded animate-pulse">
@@ -172,7 +173,7 @@ export const ManualVerificationPage: React.FC = () => {
               <div>
                 <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
                   <FileText className="w-4 h-4 text-blue-600" />
-                  Extracted Cadastral Metadata & Tamil Registry Fields
+                  {t('cadastralAttributesVerification', 'Cadastral Attributes & Deed Cross-Verification')}
                 </h3>
                 <p className="text-xs text-slate-500">
                   Dual-language optical extraction verified against TN Land Records (தமிழ்நாடு நில ஆவணங்கள்).
@@ -184,15 +185,15 @@ export const ManualVerificationPage: React.FC = () => {
             {/* Tamil Cadastral Badge Strip */}
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 bg-slate-50 p-2.5 rounded-lg border border-slate-200 text-xs">
               <div>
-                <span className="text-[10px] uppercase font-bold text-slate-400 block">பட்டா எண் (Patta No)</span>
+                <span className="text-[10px] uppercase font-bold text-slate-400 block">{t('pattaNumber', 'Patta Number')}</span>
                 <span className="font-mono font-bold text-blue-700">{cadastral?.pattaNumber || '640'}</span>
               </div>
               <div>
-                <span className="text-[10px] uppercase font-bold text-slate-400 block">நில வகை (Land Type)</span>
+                <span className="text-[10px] uppercase font-bold text-slate-400 block">{t('landType', 'Classification')}</span>
                 <span className="font-semibold text-slate-800">{cadastral?.landClassification || 'புன்செய் (Dry Land)'}</span>
               </div>
               <div className="col-span-2 sm:col-span-1">
-                <span className="text-[10px] uppercase font-bold text-slate-400 block">சார்பதிவாளர் (SRO)</span>
+                <span className="text-[10px] uppercase font-bold text-slate-400 block">SRO</span>
                 <span className="font-medium text-slate-700 truncate block">{cadastral?.sroJurisdiction || 'Kangeyam SRO'}</span>
               </div>
             </div>
@@ -211,7 +212,7 @@ export const ManualVerificationPage: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5">
                     <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
-                      Owner Name / பட்டாதாரர் பெயர்
+                      {t('ownerName', 'Owner Name')}
                     </span>
                     <span className="text-[9px] bg-blue-100 text-blue-700 font-bold px-1.5 py-0.2 rounded">
                       Dual Script
@@ -278,7 +279,7 @@ export const ManualVerificationPage: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5">
                     <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
-                      Survey Number & Sub-Division / புல எண்
+                      {t('surveyNumber', 'Survey Number')}
                     </span>
                     {currentDoc.overallConfidence === 'LOW' && (
                       <span className="text-[10px] font-bold text-amber-900 bg-amber-200 px-1.5 py-0.2 rounded flex items-center gap-1">
@@ -307,7 +308,7 @@ export const ManualVerificationPage: React.FC = () => {
                       </button>
                     </div>
                   ) : (
-                    <span className="text-sm font-mono font-bold text-slate-900 bg-white px-2.5 py-0.5 rounded border border-slate-200">
+                    <span className="text-sm font-mono font-bold text-slate-900">
                       {currentDoc.surveyNumber}
                     </span>
                   )}
@@ -318,7 +319,7 @@ export const ManualVerificationPage: React.FC = () => {
                       handleStartEdit('surveyNumber', currentDoc.surveyNumber);
                     }}
                     className="p-1 text-slate-400 hover:text-blue-700 rounded hover:bg-white"
-                    title="Correct Survey Number"
+                    title="Edit value"
                   >
                     <Edit2 className="w-3.5 h-3.5" />
                   </button>
@@ -394,16 +395,14 @@ export const ManualVerificationPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Four Boundaries (நான்கு எல்லைகள்) Schedule Grid */}
-              <div className="p-3 rounded-lg border border-slate-200 bg-slate-50/60 space-y-2.5">
+              {/* Four Boundaries Section */}
+              <div className="bg-slate-50 p-3.5 rounded-lg border border-slate-200 space-y-2.5">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5">
-                    <Compass className="w-4 h-4 text-amber-600" />
-                    <span className="text-xs font-bold uppercase tracking-wider text-slate-700">
-                      Schedule of Boundaries / நான்கு எல்லைகள்
-                    </span>
-                  </div>
-                  <span className="text-[10px] font-semibold text-slate-400">GIS Cadastral Polygon Sync</span>
+                  <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                    <Compass className="w-4 h-4 text-blue-600" />
+                    {t('cadastralFourBoundaries', 'Cadastral Four Boundaries (நான்கு எல்லைகள்)')}
+                  </span>
+                  <span className="text-[10px] text-slate-400">Settlement RoR</span>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
@@ -411,7 +410,7 @@ export const ManualVerificationPage: React.FC = () => {
                   <div className="bg-white p-2.5 rounded border border-slate-200 shadow-2xs">
                     <div className="flex items-center justify-between mb-1">
                       <span className="font-bold text-slate-600 flex items-center gap-1 text-[11px]">
-                        ⬆️ North (வடக்கு)
+                        ⬆️ {t('boundaryNorth', 'North (வடக்கு)')}
                       </span>
                       <button
                         onClick={() => handleStartBoundaryEdit('north', boundaries.north || '')}
@@ -451,7 +450,7 @@ export const ManualVerificationPage: React.FC = () => {
                   <div className="bg-white p-2.5 rounded border border-slate-200 shadow-2xs">
                     <div className="flex items-center justify-between mb-1">
                       <span className="font-bold text-slate-600 flex items-center gap-1 text-[11px]">
-                        ⬇️ South (தெற்கு)
+                        ⬇️ {t('boundarySouth', 'South (தெற்கு)')}
                       </span>
                       <button
                         onClick={() => handleStartBoundaryEdit('south', boundaries.south || '')}
@@ -491,7 +490,7 @@ export const ManualVerificationPage: React.FC = () => {
                   <div className="bg-white p-2.5 rounded border border-slate-200 shadow-2xs">
                     <div className="flex items-center justify-between mb-1">
                       <span className="font-bold text-slate-600 flex items-center gap-1 text-[11px]">
-                        ➡️ East (கிழக்கு)
+                        ➡️ {t('boundaryEast', 'East (கிழக்கு)')}
                       </span>
                       <button
                         onClick={() => handleStartBoundaryEdit('east', boundaries.east || '')}
@@ -531,7 +530,7 @@ export const ManualVerificationPage: React.FC = () => {
                   <div className="bg-white p-2.5 rounded border border-slate-200 shadow-2xs">
                     <div className="flex items-center justify-between mb-1">
                       <span className="font-bold text-slate-600 flex items-center gap-1 text-[11px]">
-                        ⬅️ West (மேற்கு)
+                        ⬅️ {t('boundaryWest', 'West (மேற்கு)')}
                       </span>
                       <button
                         onClick={() => handleStartBoundaryEdit('west', boundaries.west || '')}
@@ -573,7 +572,7 @@ export const ManualVerificationPage: React.FC = () => {
             {/* Officer Remarks / Notes Box */}
             <div className="pt-2">
               <label className="text-xs font-bold text-slate-700 block mb-1">
-                Officer Verification Remarks (சரிபார்ப்புக் குறிப்புகள்)
+                {t('officerRemarks', 'Officer Verification Remarks (சரிபார்ப்புக் குறிப்புகள்)')}
               </label>
               <textarea
                 value={officerNotes}
@@ -591,7 +590,7 @@ export const ManualVerificationPage: React.FC = () => {
                 className="px-3.5 py-2 rounded-lg border border-rose-300 hover:bg-rose-50 text-rose-700 text-xs font-semibold flex items-center gap-1.5 transition-colors"
               >
                 <XCircle className="w-4 h-4" />
-                <span>Reject / Return Document</span>
+                <span>{t('rejectReturnDoc', 'Reject / Return Document')}</span>
               </button>
 
               <button
@@ -599,7 +598,7 @@ export const ManualVerificationPage: React.FC = () => {
                 onClick={handleSendToGis}
                 className="px-5 py-2 rounded-lg bg-blue-700 hover:bg-blue-800 text-white text-xs sm:text-sm font-semibold transition-colors flex items-center gap-1.5 shadow-xs"
               >
-                <span>Confirm & Send to GIS Validation</span>
+                <span>{t('confirmAndSendToGis', 'Confirm & Send to GIS Validation')}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </div>
